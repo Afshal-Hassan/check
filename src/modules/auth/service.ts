@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import { SignupDto } from './dtos/Signup';
-import { generateOtp } from '@/utils/otp.util';
-import { sendOtpEmail } from '@/utils/email.util';
+import { SignupDto } from './auth.dto';
+import * as OtpUtil from '@/utils/otp.util';
+import * as EmailUtil from '@/utils/email.util';
 import * as UserService from '@/modules/user/service';
 
 export const signup = async (data: SignupDto) => {
@@ -12,8 +12,8 @@ export const signup = async (data: SignupDto) => {
   const passwordHash = await bcrypt.hash(data.password, 10);
   const user = await UserService.saveUser({ ...data, passwordHash });
 
-  const otp = generateOtp(user.email);
-  await sendOtpEmail(user.email, otp);
+  const otp = OtpUtil.generateOtp(user.email);
+  await EmailUtil.sendOtpEmail(user.email, otp);
 
   return { userId: user.id, email: user.email };
 };
