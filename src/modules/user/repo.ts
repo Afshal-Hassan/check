@@ -13,6 +13,6 @@ export const save = async (userData: Partial<User>): Promise<User> => {
   return await UserRepository.save(user);
 };
 
-export const update = async (userId: string): Promise<UpdateResult> => {
+export const updateUserVerificationById = async (userId: string): Promise<UpdateResult> => {
   return await UserRepository.update(userId, { isVerified: true });
 };

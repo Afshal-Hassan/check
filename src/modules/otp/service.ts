@@ -1,13 +1,25 @@
-import * as OtpUtil from '@/utils/otp.util';
+import { OtpDto } from './dto';
+import redisClient from '@/config/redis.config';
 import * as UserService from '@/modules/user/service';
 
-export const verifyOtp = async (email: string, otp: string) => {
-  const valid = OtpUtil.verifyOtp(email, otp);
-  if (!valid) throw new Error('Invalid or expired OTP');
+export const verifyOtp = async (otpDto: OtpDto): Promise<void> => {
+  const { email, otp } = otpDto;
 
-  const user = await UserService.getUserByEmail(email);
-  if (!user) throw new Error('User not found');
+  const otpKey = `otp:${email}`;
 
-  await UserService.verifyUser(user.id);
-  return { userId: user.id, verified: true };
+  const storedOtp = await redisClient.get(otpKey);
+
+  if (!storedOtp) {
+    throw new Error('OTP has expired or does not exist');
+  }
+
+  if (Number(storedOtp) !== otp) {
+    throw new Error('Invalid OTP');
+  }
+
+  await redisClient.del(otpKey);
+
+  await UserService.markUserAsVerified(email);
+
+  return;
 };

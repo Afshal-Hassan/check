@@ -1,12 +1,11 @@
-import * as AuthService from './service';
+import * as OtpService from './service';
 import { Request, Response } from 'express';
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { email, otp } = req.body;
-    const result = await AuthService.verifyOtp(email, otp);
+    await OtpService.verifyOtp(req.body);
 
-    res.status(200).json({ message: 'User verified', ...result });
+    res.status(200).json({ message: 'Otp verified' });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
