@@ -11,13 +11,15 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "start": "node dist/index.js",
+    "start": "node dist/server.js",
     "build": "tsc",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "typeorm": "typeorm-ts-node-commonjs",
-    "prepare": "husky install"
+    "typeorm": "typeorm-ts-node-commonjs"
+  },
+  "_moduleAliases": {
+    "@": "dist"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -27,6 +29,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
+    "module-alias": "^2.2.3",
     "nodemailer": "^7.0.12",
     "pg": "^8.16.3",
     "redis": "^5.10.0",

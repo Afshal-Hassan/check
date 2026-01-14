@@ -16,7 +16,7 @@
     "strictPropertyInitialization": false,
     "sourceMap": true,
 
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
       "@/modules/*": ["src/modules/*"]
