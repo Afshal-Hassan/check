@@ -17,8 +17,7 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "typeorm": "typeorm-ts-node-commonjs",
-    "prepare": "husky install",
-    "preinstall": "if [ \"$VERCEL\" = \"1\" ]; then exit 0; fi && husky install"
+    "prepare": "husky install"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -45,7 +44,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "husky": "^8.0.0",
+    "husky": "^9.1.7",
     "nodemon": "^3.1.11",
     "prettier": "^3.7.4",
     "ts-node": "^10.9.2",
