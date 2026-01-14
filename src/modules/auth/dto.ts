@@ -1,4 +1,22 @@
-import { IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+  ValidateIf,
+} from 'class-validator';
+import { SocialProvider } from './enums';
+
+export class OtpVerificationDto {
+  @IsNotEmpty()
+  @IsNumber()
+  otp: number;
+}
 
 export class SignupDto {
   @IsEmail()
@@ -7,10 +25,6 @@ export class SignupDto {
 }
 
 export class UserDto {
-  @IsNotEmpty()
-  @IsEmail()
-  userId!: string;
-
   @IsNotEmpty()
   @IsString()
   @MaxLength(100)
@@ -30,20 +44,39 @@ export class UserDto {
   })
   password!: string;
 
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(50)
-  country!: string;
+  // @IsNotEmpty()
+  // @IsString()
+  // @MaxLength(50)
+  // country!: string;
 
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(50)
-  city!: string;
+  // @IsNotEmpty()
+  // @IsString()
+  // @MaxLength(50)
+  // city!: string;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
+  // @IsString()
+  // @MaxLength(50)
+  // state!: string;
+}
+
+export class LoginDto {
+  @ValidateIf((o) => !o.provider)
+  @IsEmail()
+  email!: string;
+
+  @ValidateIf((o) => !o.provider)
   @IsString()
-  @MaxLength(50)
-  state!: string;
+  password!: string;
+
+  @IsOptional()
+  @IsEnum(SocialProvider)
+  provider!: SocialProvider;
+
+  @ValidateIf((o) => o.provider)
+  @IsString()
+  @IsNotEmpty()
+  socialToken!: string;
 }
 
 export class ForgotPasswordDto {

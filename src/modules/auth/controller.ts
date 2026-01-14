@@ -13,16 +13,6 @@ export const signup = async (req: Request, res: Response) => {
   }
 };
 
-export const save = async (req: Request, res: Response) => {
-  try {
-    const result = await AuthService.save(req.body);
-
-    res.status(201).json({ message: 'User has been saved', ...result });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-};
-
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const result = await AuthService.forgotPassword(req.body);

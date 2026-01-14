@@ -1,22 +1,25 @@
-const otpStore = new Map<string, { code: string; expiresAt: number }>();
+import redisClient from '@/config/redis.config';
+import { OTP_EXPIRY_SECONDS } from '@/constants';
 
 export const generateOtp = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-export const verifyOtp = (email: string, code: string): boolean => {
-  const otp = otpStore.get(email);
+export const storeOtpInRedis = async (
+  email: string,
+  action: string,
+  otp: string,
+): Promise<void> => {
+  const otpKey = `otp:${email}:${action}`;
+  await redisClient.setEx(otpKey, OTP_EXPIRY_SECONDS, otp);
+};
 
-  if (!otp) return false;
+export const verifyOtp = async (email: string, action: string, otp: number): Promise<void> => {
+  const otpKey = `otp:${email}:${action}`;
+  const storedOtp = await redisClient.get(otpKey);
 
-  if (otp.expiresAt < Date.now()) {
-    otpStore.delete(email);
-    return false;
-  }
+  if (!storedOtp) throw new Error('OTP has expired or does not exist');
+  if (Number(storedOtp) !== otp) throw new Error('Invalid OTP');
 
-  const isValid = otp.code === code;
-
-  if (isValid) otpStore.delete(email);
-
-  return isValid;
+  await redisClient.del(otpKey);
 };

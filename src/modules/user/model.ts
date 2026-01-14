@@ -19,8 +19,17 @@ export class User {
   @Column({ unique: true, name: 'email' })
   email!: string;
 
-  @Column({ name: 'password_hash' })
+  @Column({ name: 'password_hash', nullable: true })
   passwordHash!: string;
+
+  @Column({ name: 'country', nullable: true })
+  country!: string;
+
+  @Column({ name: 'city', nullable: true })
+  city!: string;
+
+  @Column({ name: 'state', nullable: true })
+  state!: string;
 
   @Column({ default: true, name: 'is_verified' })
   isVerified!: boolean;
