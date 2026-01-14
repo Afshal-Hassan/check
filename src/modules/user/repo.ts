@@ -1,6 +1,6 @@
 import { User } from './model';
 import { UpdateResult } from 'typeorm';
-import { AppDataSource } from '@/data-source';
+import { AppDataSource } from '@/config/data-source';
 
 export const UserRepository = AppDataSource.getRepository(User);
 
@@ -13,6 +13,9 @@ export const save = async (userData: Partial<User>): Promise<User> => {
   return await UserRepository.save(user);
 };
 
-export const updateUserVerificationById = async (userId: string): Promise<UpdateResult> => {
-  return await UserRepository.update(userId, { isVerified: true });
+export const updatePasswordByEmail = async (
+  email: string,
+  hashedPassword: string,
+): Promise<UpdateResult> => {
+  return await UserRepository.update(email, { passwordHash: hashedPassword });
 };

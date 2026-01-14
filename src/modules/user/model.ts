@@ -22,7 +22,7 @@ export class User {
   @Column({ name: 'password_hash' })
   passwordHash!: string;
 
-  @Column({ default: false, name: 'is_verified' })
+  @Column({ default: true, name: 'is_verified' })
   isVerified!: boolean;
 
   @CreateDateColumn({ name: 'created_at' })

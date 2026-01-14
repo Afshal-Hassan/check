@@ -1,6 +1,16 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class SignupDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+}
+
+export class UserDto {
+  @IsNotEmpty()
+  @IsEmail()
+  userId!: string;
+
   @IsNotEmpty()
   @IsString()
   @MaxLength(100)
@@ -34,4 +44,26 @@ export class SignupDto {
   @IsString()
   @MaxLength(50)
   state!: string;
+}
+
+export class ForgotPasswordDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+}
+
+export class ResetPasswordDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(8)
+  @MaxLength(100)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/, {
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+  })
+  newPassword!: string;
 }

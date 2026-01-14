@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import app from '@/app';
-import { AppDataSource } from '@/data-source';
+import { AppDataSource } from '@/config/data-source';
 import { connectRedis } from '@/config/redis.config';
 
 const PORT = process.env.PORT || 3000;
