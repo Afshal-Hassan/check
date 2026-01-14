@@ -1,18 +1,12 @@
-import { SocialProvider } from './enums';
+import { OtpAction } from '@/constants';
 import * as JwtUtil from '@/utils/jwt.util';
 import * as OtpUtil from '@/utils/otp.util';
 import * as EmailUtil from '@/utils/email.util';
 import * as GoogleClient from '@/clients/google';
+import { AuthType, SocialProvider } from './enums';
 import * as PasswordUtil from '@/utils/password.util';
 import * as UserService from '@/modules/user/service';
-import {
-  OtpVerificationDto,
-  SignupDto,
-  UserDto,
-  ForgotPasswordDto,
-  ResetPasswordDto,
-  LoginDto,
-} from './dto';
+import { SignupDto, ForgotPasswordDto, ResetPasswordDto, LoginDto, CompleteSignupDto } from './dto';
 
 export const signup = async (data: SignupDto) => {
   const { email } = data;
@@ -22,31 +16,36 @@ export const signup = async (data: SignupDto) => {
   if (existingUser) throw new Error('Email already registered');
 
   const otp = OtpUtil.generateOtp();
-  await OtpUtil.storeOtpInRedis(email, 'signup', otp);
+  await OtpUtil.storeOtpInRedis({
+    email,
+    action: OtpAction.Signup,
+    otp,
+  });
 
   await EmailUtil.sendOtpEmail(email, otp);
 
   return { email };
 };
 
-export const completeSignUp = async (data: OtpVerificationDto & UserDto) => {
+export const completeSignUp = async (data: CompleteSignupDto) => {
   const { email, password, otp } = data;
 
   const existingUser = await UserService.getUserByEmail(email);
 
   if (existingUser) throw new Error('Email already registered');
 
-  await OtpUtil.verifyOtp(email, 'signup', otp);
+  await OtpUtil.verifyOtp({ email, action: OtpAction.Signup, otp });
 
   const passwordHash = await PasswordUtil.hashPassword(password);
   const user = await UserService.saveUser({
     ...data,
+    authType: AuthType.Email,
     passwordHash,
   });
 
   const token = JwtUtil.generateToken(user);
 
-  return { ...user, token };
+  return { ...user, token, passwordHash: undefined };
 };
 
 export const login = async (data: LoginDto) => {
@@ -58,7 +57,7 @@ export const login = async (data: LoginDto) => {
 };
 
 const loginWithEmail = async (email: string, password: string) => {
-  const user = await UserService.getUserByEmail(email);
+  const user = await UserService.getActiveUserByEmail(email);
 
   if (!user) {
     throw new Error('Invalid email');
@@ -87,17 +86,25 @@ const loginWithSocial = async (provider: SocialProvider, socialToken: string) =>
 };
 
 const continueWithGoogle = async (accessToken: string) => {
+  console.log('accessToken:', accessToken);
   const response = await GoogleClient.verifyToken(accessToken);
 
   if (response.status === 400) {
     throw new Error('Invalid token or credentials');
   }
 
+  const existingUser = await UserService.getUserByEmail(response.data.email);
+
+  if (existingUser && existingUser.isSuspended) {
+    throw new Error('Account is suspended');
+  }
+
   const user =
-    (await UserService.getUserByEmail(response.data.email)) ||
+    existingUser ||
     (await UserService.saveUser({
       email: response.data.email,
       fullName: response.data.name,
+      authType: AuthType.Social,
     }));
 
   const token = JwtUtil.generateToken(user);
@@ -108,26 +115,34 @@ const continueWithGoogle = async (accessToken: string) => {
 export const forgotPassword = async (data: ForgotPasswordDto) => {
   const { email } = data;
 
-  const user = await UserService.getUserByEmail(email);
+  const user = await UserService.getActiveUserByEmail(email);
 
   if (!user) throw new Error('User not found');
 
   const otp = OtpUtil.generateOtp();
-  await OtpUtil.storeOtpInRedis(email, 'forgot-password', otp);
+  await OtpUtil.storeOtpInRedis({
+    email,
+    action: OtpAction.ForgotPassword,
+    otp,
+  });
 
   await EmailUtil.sendOtpEmail(email, otp);
 
   return { email };
 };
 
-export const resetPassword = async (data: OtpVerificationDto & ResetPasswordDto): Promise<void> => {
+export const resetPassword = async (data: ResetPasswordDto): Promise<void> => {
   const { email, newPassword, otp } = data;
 
-  const user = await UserService.getUserByEmail(email);
+  const user = await UserService.getActiveUserByEmail(email);
 
   if (!user) throw new Error('User not found');
 
-  await OtpUtil.verifyOtp(email, 'forgot-password', otp);
+  const isSameAsOld = await PasswordUtil.comparePassword(newPassword, user.passwordHash);
+
+  if (isSameAsOld) throw new Error('New password cannot be the same as the old password');
+
+  await OtpUtil.verifyOtp({ email, action: OtpAction.ForgotPassword, otp });
 
   const passwordHash = await PasswordUtil.hashPassword(newPassword);
 

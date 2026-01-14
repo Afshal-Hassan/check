@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { OtpAction } from '@/constants';
+import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class VerifyOtpDto {
   @IsNotEmpty()
@@ -6,8 +7,8 @@ export class VerifyOtpDto {
   email!: string;
 
   @IsNotEmpty()
-  @IsString()
-  action!: string;
+  @IsEnum(OtpAction)
+  action!: OtpAction;
 
   @IsNotEmpty()
   @IsNumber()
@@ -20,6 +21,6 @@ export class ResendOtpDto {
   email!: string;
 
   @IsNotEmpty()
-  @IsString()
-  action!: string;
+  @IsEnum(OtpAction)
+  action!: OtpAction;
 }

@@ -1,8 +1,8 @@
 import cors from 'cors';
 import express from 'express';
-import { globalErrorHandler } from '@/middleware';
 import otpRoutes from '@/modules/otp/route';
 import authRoutes from '@/modules/auth/route';
+import { globalErrorHandler } from '@/middleware';
 
 const app = express();
 

@@ -22,6 +22,9 @@ export class User {
   @Column({ name: 'password_hash', nullable: true })
   passwordHash!: string;
 
+  @Column({ name: 'auth_type' })
+  authType!: string;
+
   @Column({ name: 'country', nullable: true })
   country!: string;
 
@@ -31,8 +34,11 @@ export class User {
   @Column({ name: 'state', nullable: true })
   state!: string;
 
-  @Column({ default: true, name: 'is_verified' })
+  @Column({ default: false, name: 'is_verified' })
   isVerified!: boolean;
+
+  @Column({ default: false, name: 'is_suspended' })
+  isSuspended!: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

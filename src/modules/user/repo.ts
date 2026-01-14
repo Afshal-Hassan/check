@@ -17,5 +17,14 @@ export const updatePasswordByEmail = async (
   email: string,
   hashedPassword: string,
 ): Promise<UpdateResult> => {
-  return await UserRepository.update(email, { passwordHash: hashedPassword });
+  return await UserRepository.update({ email }, { passwordHash: hashedPassword });
+};
+
+export const findActiveUserByEmail = async (email: string): Promise<User | null> => {
+  return await UserRepository.findOne({
+    where: {
+      email,
+      isSuspended: false,
+    },
+  });
 };

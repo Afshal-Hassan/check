@@ -1,1 +1,4 @@
-export const OTP_EXPIRY_SECONDS = 300; // 5 minutes
+export enum OtpAction {
+  Signup = 'signup',
+  ForgotPassword = 'forgot-password',
+}
