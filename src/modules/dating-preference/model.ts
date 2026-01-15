@@ -1,19 +1,10 @@
 import { User } from '@/modules/user/model';
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
+import { InterestedInEnum, LookingForEnum } from './enums';
+import { Check, Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 
-enum InterestedInEnum {
-  MEN = 'men',
-  WOMEN = 'women',
-  EVERYONE = 'everyone',
-}
-
-enum LookingForEnum {
-  LONG_TERM = 'long_term',
-  SHORT_TERM = 'short_term',
-  FRIENDSHIP = 'friendship',
-  NOT_SURE = 'not_sure',
-}
-
+@Check(`"min_age" BETWEEN 18 AND 100`)
+@Check(`"max_age" BETWEEN 18 AND 100`)
+@Check(`"max_age" >= "min_age"`)
 @Entity('dating_preferences')
 export class DatingPreference {
   @PrimaryColumn('uuid', { name: 'user_id' })

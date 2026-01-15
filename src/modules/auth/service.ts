@@ -16,19 +16,19 @@ export const signup = async (data: SignupDto) => {
   if (existingUser) throw new Error('Email already registered');
 
   const otp = OtpUtil.generateOtp();
+
   await OtpUtil.storeOtpInRedis({
     email,
     action: OtpAction.Signup,
     otp,
   });
-
   await EmailUtil.sendOtpEmail(email, otp);
 
   return { email };
 };
 
 export const completeSignUp = async (data: CompleteSignupDto) => {
-  const { email, password, otp } = data;
+  const { fullName, email, password, otp } = data;
 
   const existingUser = await UserService.getUserByEmail(email);
 
@@ -38,7 +38,8 @@ export const completeSignUp = async (data: CompleteSignupDto) => {
 
   const passwordHash = await PasswordUtil.hashPassword(password);
   const user = await UserService.saveUser({
-    ...data,
+    fullName,
+    email,
     authType: AuthType.Email,
     passwordHash,
   });
@@ -50,9 +51,9 @@ export const completeSignUp = async (data: CompleteSignupDto) => {
 
 export const login = async (data: LoginDto) => {
   if (data.provider) {
-    return await loginWithSocial(data.provider, data.socialToken);
+    return loginWithSocial(data.provider, data.socialToken);
   } else {
-    return await loginWithEmail(data.email, data.password);
+    return loginWithEmail(data.email, data.password);
   }
 };
 
@@ -77,7 +78,7 @@ const loginWithEmail = async (email: string, password: string) => {
 const loginWithSocial = async (provider: SocialProvider, socialToken: string) => {
   switch (provider) {
     case SocialProvider.Google:
-      return await continueWithGoogle(socialToken);
+      return continueWithGoogle(socialToken);
     case SocialProvider.Apple:
       throw new Error('Apple login not implemented');
     default:
@@ -120,12 +121,12 @@ export const forgotPassword = async (data: ForgotPasswordDto) => {
   if (!user) throw new Error('User not found');
 
   const otp = OtpUtil.generateOtp();
+
   await OtpUtil.storeOtpInRedis({
     email,
     action: OtpAction.ForgotPassword,
     otp,
   });
-
   await EmailUtil.sendOtpEmail(email, otp);
 
   return { email };

@@ -5,26 +5,44 @@ import { AppDataSource } from '@/config/data-source';
 export const UserRepository = AppDataSource.getRepository(User);
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
-  return await UserRepository.findOne({ where: { email } });
+  return UserRepository.findOne({ where: { email } });
 };
 
 export const save = async (userData: Partial<User>): Promise<User> => {
   const user = UserRepository.create(userData);
-  return await UserRepository.save(user);
+  return UserRepository.save(user);
 };
 
 export const updatePasswordByEmail = async (
   email: string,
   hashedPassword: string,
 ): Promise<UpdateResult> => {
-  return await UserRepository.update({ email }, { passwordHash: hashedPassword });
+  return UserRepository.update({ email }, { passwordHash: hashedPassword });
 };
 
 export const findActiveUserByEmail = async (email: string): Promise<User | null> => {
-  return await UserRepository.findOne({
+  return UserRepository.findOne({
     where: {
       email,
       isSuspended: false,
     },
   });
+};
+
+export const updateLocationById = async (
+  userId: string,
+  country?: string,
+  city?: string,
+  state?: string,
+) => {
+  const user = await UserRepository.preload({
+    id: userId,
+    country,
+    city,
+    state,
+  });
+
+  if (!user) throw new Error('User not found');
+
+  return await UserRepository.save(user);
 };

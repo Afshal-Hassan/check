@@ -11,14 +11,14 @@ export const generateOtp = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-export const storeOtpInRedis = async ({ email, action, otp }: StoreOtpParams): Promise<void> => {
+export const storeOtpInRedis = async ({ email, action, otp }: StoreOtpParams): Promise<any> => {
   const otpKey = `otp:${email}:${action}`;
   const expiry =
     action === OtpAction.Signup
       ? Number(process.env.SIGNUP_OTP_EXPIRY_SECONDS)
       : Number(process.env.FORGOT_PASSWORD_OTP_EXPIRY_SECONDS);
 
-  await redisClient.setEx(otpKey, expiry, otp);
+  return redisClient.setEx(otpKey, expiry, otp);
 };
 
 export const verifyOtp = async ({

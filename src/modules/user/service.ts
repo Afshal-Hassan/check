@@ -1,18 +1,67 @@
 import { User } from './model';
-import { findActiveUserByEmail, findUserByEmail, save, updatePasswordByEmail } from './repo';
+import { UserDTO } from './dto';
+import {
+  findActiveUserByEmail,
+  findUserByEmail,
+  save,
+  updateLocationById,
+  updatePasswordByEmail,
+} from './repo';
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
-  return await findUserByEmail(email);
+  return findUserByEmail(email);
 };
 
 export const saveUser = async (userData: Partial<User>): Promise<User> => {
-  return await save(userData);
+  return save(userData);
 };
 
 export const updateUserPassword = async (email: string, hashedPassword: string) => {
-  return await updatePasswordByEmail(email, hashedPassword);
+  return updatePasswordByEmail(email, hashedPassword);
 };
 
 export const getActiveUserByEmail = async (email: string): Promise<User | null> => {
-  return await findActiveUserByEmail(email);
+  return findActiveUserByEmail(email);
+};
+
+// export const updateUserAndProfile = async (data: UserDTO) => {
+//   const { userId, country, city, state, interests, ...userProfileData } = data;
+
+//   const user = await updateLocationByUserId(userId, country, city, state);
+
+//   const { bio, dateOfBirth, gender, occupation } = userProfileData;
+
+//   const translations = [
+//     {
+//       userId,
+//       heightCm: 0,
+//       languageCode: 'en',
+//       bio,
+//     },
+//   ];
+
+//   const updatedProfile = await UserProfileService.saveUserProfile({
+//     userId,
+//     dateOfBirth,
+//     gender,
+//     occupation,
+//     translations,
+//   });
+
+//   const savedInterests = await InterestService.saveInterests(userId, interests);
+
+//   return {
+//     ...user,
+//     passwordHash: undefined,
+//     bio: updatedProfile.translations?.find((t) => t.languageCode === 'en')?.bio,
+//     dateOfBirth: updatedProfile.dateOfBirth,
+//     gender: updatedProfile.gender,
+//     occupation: updatedProfile.occupation,
+//   };
+// };
+
+export const updateUserLocationById = async (data: UserDTO) => {
+  const { userId, country, city, state } = data;
+
+  return updateLocationById(userId, country, city, state);
 };

@@ -1,36 +1,8 @@
+import { GenderEnum } from '@/constants';
 import { User } from '@/modules/user/model';
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
-
-enum GenderEnum {
-  MALE = 'male',
-  FEMALE = 'female',
-  NON_BINARY = 'non_binary',
-  OTHER = 'other',
-  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
-}
-
-enum BodyTypeEnum {
-  SLIM = 'slim',
-  ATHLETIC = 'athletic',
-  AVERAGE = 'average',
-  CURVY = 'curvy',
-  MUSCULAR = 'muscular',
-  PLUS_SIZE = 'plus_size',
-}
-
-enum RelationshipStatusEnum {
-  SINGLE = 'single',
-  DIVORCED = 'divorced',
-  WIDOWED = 'widowed',
-  SEPARATED = 'separated',
-}
-
-enum ChildrenEnum {
-  YES = 'yes',
-  NO = 'no',
-  MAYBE = 'maybe',
-  OPEN_TO_DISCUSSION = 'open_to_discussion',
-}
+import { UserProfileTranslation } from './model.translation';
+import { BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
 
 @Entity('user_profiles')
 export class UserProfile {
@@ -41,9 +13,6 @@ export class UserProfile {
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user!: User;
 
-  @Column({ name: 'bio', nullable: true })
-  bio!: string;
-
   @Column({ name: 'date_of_birth', type: 'date' })
   dateOfBirth!: Date;
 
@@ -53,19 +22,22 @@ export class UserProfile {
   @Column({ name: 'gender', type: 'varchar', length: 32 })
   gender!: GenderEnum;
 
-  @Column({ name: 'height_cm' })
-  heightCm!: number;
-
-  @Column({ name: 'body_type', type: 'varchar', length: 32 })
+  @Column({ name: 'body_type', type: 'varchar', length: 32, nullable: true })
   bodyType!: BodyTypeEnum;
 
   @Column({
     name: 'relationship_status',
     type: 'varchar',
     length: 32,
+    nullable: true,
   })
   relationshipStatus!: RelationshipStatusEnum;
 
-  @Column({ name: 'children_preference', type: 'varchar', length: 32 })
+  @Column({ name: 'children_preference', type: 'varchar', length: 32, nullable: true })
   childrenPreference!: ChildrenEnum;
+
+  @OneToMany(() => UserProfileTranslation, (translation) => translation.userProfile, {
+    cascade: true,
+  })
+  translations!: UserProfileTranslation[];
 }
