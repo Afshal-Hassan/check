@@ -13,25 +13,25 @@ export class User {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })
   id!: string;
 
-  @Column({ name: 'full_name' })
+  @Column({ name: 'full_name', type: 'varchar', length: 32 })
   fullName!: string;
 
-  @Column({ unique: true, name: 'email' })
+  @Column({ unique: true, name: 'email', type: 'text' })
   email!: string;
 
-  @Column({ name: 'password_hash', nullable: true })
+  @Column({ name: 'password_hash', nullable: true, type: 'text' })
   passwordHash!: string;
 
-  @Column({ name: 'auth_type' })
+  @Column({ name: 'auth_type', type: 'varchar', length: 32 })
   authType!: string;
 
-  @Column({ name: 'country', nullable: true })
+  @Column({ name: 'country', nullable: true, type: 'varchar', length: 32 })
   country!: string;
 
-  @Column({ name: 'city', nullable: true })
+  @Column({ name: 'city', nullable: true, type: 'varchar', length: 32 })
   city!: string;
 
-  @Column({ name: 'state', nullable: true })
+  @Column({ name: 'state', nullable: true, type: 'varchar', length: 32 })
   state!: string;
 
   @Column({ default: false, name: 'is_verified' })

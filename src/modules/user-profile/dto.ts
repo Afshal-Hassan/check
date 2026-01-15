@@ -1,5 +1,5 @@
 import { GenderEnum, BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsEnum, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class UserProfileDTO {
   @IsUUID()
@@ -8,6 +8,7 @@ export class UserProfileDTO {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   bio!: string;
 
   @IsDateString()

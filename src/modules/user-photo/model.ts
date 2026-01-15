@@ -10,7 +10,7 @@ export class UserPhoto {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ name: 's3_url' })
+  @Column({ name: 's3_url', type: 'text' })
   s3Url!: string;
 
   @Column({ name: 'order_index' })
