@@ -6,6 +6,6 @@ export const LifestylePreferenceRepository = AppDataSource.getRepository(Lifesty
 export const save = async (
   liefestylePreferenceData: Partial<LifestylePreference>,
 ): Promise<LifestylePreference> => {
-  const user = LifestylePreferenceRepository.create(liefestylePreferenceData);
-  return LifestylePreferenceRepository.save(user);
+  const lifestylePreference = LifestylePreferenceRepository.create(liefestylePreferenceData);
+  return LifestylePreferenceRepository.save(lifestylePreference);
 };

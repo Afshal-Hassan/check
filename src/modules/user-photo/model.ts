@@ -6,7 +6,7 @@ export class UserPhoto {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })
   id!: string;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user!: User;
 

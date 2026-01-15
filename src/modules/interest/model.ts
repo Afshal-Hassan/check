@@ -9,6 +9,6 @@ export class Interest {
   @Column({ unique: true })
   name!: string;
 
-  @ManyToMany(() => User, (user) => user.interests, { onDelete: 'CASCADE' })
+  @ManyToMany(() => User, (user) => user.interests, { nullable: false, onDelete: 'CASCADE' })
   users!: User[];
 }

@@ -1,10 +1,8 @@
-import { GenderEnum } from '@/constants';
-import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
-import { Relation } from 'typeorm';
+import { GenderEnum, BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
+import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsString, IsUUID } from 'class-validator';
 
 export class UserProfileDTO {
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   userId!: string;
 
@@ -26,6 +24,10 @@ export class UserProfileDTO {
 }
 
 export class PersonalDetailsDTO {
+  @IsUUID()
+  @IsNotEmpty()
+  userId!: string;
+
   @IsEnum(BodyTypeEnum)
   @IsNotEmpty()
   bodyType!: BodyTypeEnum;
@@ -38,7 +40,7 @@ export class PersonalDetailsDTO {
   @IsNotEmpty()
   childrenPreference!: ChildrenEnum;
 
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  heightCm!: number;
+  height!: string;
 }

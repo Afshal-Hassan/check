@@ -6,6 +6,6 @@ export const DatingPreferenceRepository = AppDataSource.getRepository(DatingPref
 export const save = async (
   datingPreferenceData: Partial<DatingPreference>,
 ): Promise<DatingPreference> => {
-  const user = DatingPreferenceRepository.create(datingPreferenceData);
-  return DatingPreferenceRepository.save(user);
+  const datingPreference = DatingPreferenceRepository.create(datingPreferenceData);
+  return DatingPreferenceRepository.save(datingPreference);
 };

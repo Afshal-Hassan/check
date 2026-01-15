@@ -1,13 +1,13 @@
 import { User } from '@/modules/user/model';
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { DietEnum, PoliticalEnum, SmokingEnum, WorkoutEnum } from './enums';
 
 @Entity('lifestyle_preferences')
 export class LifestylePreference {
-  @PrimaryColumn('uuid', { name: 'user_id' })
-  userId!: string;
+  @PrimaryGeneratedColumn('uuid', { name: 'id' })
+  id!: string;
 
-  @OneToOne(() => User, { onDelete: 'CASCADE' })
+  @OneToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user!: User;
 

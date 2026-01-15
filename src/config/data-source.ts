@@ -5,7 +5,6 @@ import { UserPhoto } from '@/modules/user-photo/model';
 import { UserProfile } from '@/modules/user-profile/model';
 import { DatingPreference } from '@/modules/dating-preference/model';
 import { LifestylePreference } from '@/modules/lifestyle-preference/model';
-import { UserProfileTranslation } from '@/modules/user-profile/model.translation';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -15,15 +14,7 @@ export const AppDataSource = new DataSource({
   //   username: process.env.DB_USER,
   //   password: process.env.DB_PASSWORD,
   //   database: process.env.DB_NAME,
-  entities: [
-    User,
-    UserPhoto,
-    UserProfile,
-    UserProfileTranslation,
-    Interest,
-    LifestylePreference,
-    DatingPreference,
-  ],
+  entities: [User, UserPhoto, UserProfile, Interest, LifestylePreference, DatingPreference],
   synchronize: true,
   ssl: {
     rejectUnauthorized: false,

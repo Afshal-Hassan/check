@@ -29,17 +29,10 @@ export const findActiveUserByEmail = async (email: string): Promise<User | null>
   });
 };
 
-export const updateLocationById = async (
-  userId: string,
-  country?: string,
-  city?: string,
-  state?: string,
-) => {
+export const updateLocationById = async (userId: string, userData: Partial<User>) => {
   const user = await UserRepository.preload({
     id: userId,
-    country,
-    city,
-    state,
+    ...userData,
   });
 
   if (!user) throw new Error('User not found');

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import * as LifestylePreferenceService from './service';
 
-export const save = async (req: Request, res: Response) => {
+export const saveLifestylePreference = async (req: Request, res: Response) => {
   try {
     const result = await LifestylePreferenceService.saveLifestylePreference(req.body);
 

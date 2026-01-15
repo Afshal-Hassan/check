@@ -1,37 +1,28 @@
-import { save, updatePersonalDetailsById } from './repo';
+import { save, updatePersonalDetailsByUserId } from './repo';
 import { PersonalDetailsDTO, UserProfileDTO } from './dto';
+import { DeepPartial } from 'typeorm';
 
 export const saveUserProfile = async (data: UserProfileDTO) => {
-  // Translate bio for each language
-  //   const translationPromises = TARGET_LANGUAGES.map(async (lang) => {
-  //     const result = await translate(dto.bio, { to: lang });
-  //     const translation: Partial<UserProfileTranslation> = {
-  //       languageCode: lang,
-  //       bio: result.text,
-  //       heightCm: 0, // default, you can map from DTO
-  //     };
-  //     return translation;
-  //   });
-
-  //   const translations = await Promise.all(translationPromises);
-
-  const translations = [{ languageCode: 'en', bio: data.bio, heightCm: 0, userId: data.userId }];
-
-  const savedProfile = await save({
-    ...data,
-    translations,
+  return save({
+    user: { id: data.userId } as DeepPartial<any>,
+    bioEn: data.bio,
+    bioFr: data.bio,
+    bioSp: data.bio,
+    bioAr: data.bio,
+    dateOfBirth: data.dateOfBirth,
+    occupation: data.occupation,
+    gender: data.gender,
   });
-
-  return savedProfile;
 };
 
-export const updatePersonalDetailsByUserId = async (userId: string, data: PersonalDetailsDTO) => {
-  const translations = [{ userId, languageCode: 'en', heightCm: data.heightCm, bio: '' }];
-
-  return updatePersonalDetailsById(userId, {
+export const updatePersonalDetails = async (userId: string, data: PersonalDetailsDTO) => {
+  return updatePersonalDetailsByUserId(userId, {
     bodyType: data.bodyType,
     relationshipStatus: data.relationshipStatus,
     childrenPreference: data.childrenPreference,
-    translations,
+    heightEn: data.height,
+    heightFr: data.height,
+    heightSp: data.height,
+    heightAr: data.height,
   });
 };

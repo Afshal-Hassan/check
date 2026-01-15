@@ -1,17 +1,39 @@
-import { GenderEnum } from '@/constants';
 import { User } from '@/modules/user/model';
-import { UserProfileTranslation } from './model.translation';
-import { BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
+import { GenderEnum, BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('user_profiles')
 export class UserProfile {
-  @PrimaryColumn('uuid', { name: 'user_id' })
-  userId!: string;
+  @PrimaryGeneratedColumn('uuid', { name: 'id' })
+  id!: string;
 
-  @OneToOne(() => User, { onDelete: 'CASCADE' })
+  @OneToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user!: User;
+
+  @Column({ name: 'bio_en' })
+  bioEn!: string;
+
+  @Column({ name: 'bio_fr' })
+  bioFr!: string;
+
+  @Column({ name: 'bio_sp' })
+  bioSp!: string;
+
+  @Column({ name: 'bio_ar' })
+  bioAr!: string;
+
+  @Column({ name: 'height_en', nullable: true })
+  heightEn!: string;
+
+  @Column({ name: 'height_fr', nullable: true })
+  heightFr!: string;
+
+  @Column({ name: 'height_sp', nullable: true })
+  heightSp!: string;
+
+  @Column({ name: 'height_ar', nullable: true })
+  heightAr!: string;
 
   @Column({ name: 'date_of_birth', type: 'date' })
   dateOfBirth!: Date;
@@ -35,9 +57,4 @@ export class UserProfile {
 
   @Column({ name: 'children_preference', type: 'varchar', length: 32, nullable: true })
   childrenPreference!: ChildrenEnum;
-
-  @OneToMany(() => UserProfileTranslation, (translation) => translation.userProfile, {
-    cascade: true,
-  })
-  translations!: UserProfileTranslation[];
 }

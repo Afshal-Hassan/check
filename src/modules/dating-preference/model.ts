@@ -1,16 +1,16 @@
 import { User } from '@/modules/user/model';
 import { InterestedInEnum, LookingForEnum } from './enums';
-import { Check, Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
+import { Check, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Check(`"min_age" BETWEEN 18 AND 100`)
 @Check(`"max_age" BETWEEN 18 AND 100`)
 @Check(`"max_age" >= "min_age"`)
 @Entity('dating_preferences')
 export class DatingPreference {
-  @PrimaryColumn('uuid', { name: 'user_id' })
-  userId!: string;
+  @PrimaryGeneratedColumn('uuid', { name: 'id' })
+  id!: string;
 
-  @OneToOne(() => User, { onDelete: 'CASCADE' })
+  @OneToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user!: User;
 

@@ -4,27 +4,27 @@ import { IsEnum, IsInt, IsNotEmpty, IsUUID, Max, Min } from 'class-validator';
 export class DatingPreferenceDTO {
   @IsUUID()
   @IsNotEmpty()
-  userId: string;
+  userId!: string;
 
   @IsInt()
   @Min(18)
   @Max(80)
-  minAge: number;
+  minAge!: number;
 
   @IsInt()
   @Min(18)
   @Max(80)
-  maxAge: number;
+  maxAge!: number;
 
   @IsInt()
   @Min(1)
-  maxDistanceKm: number;
+  maxDistanceKm!: number;
 
   @IsEnum(InterestedInEnum)
   @IsNotEmpty()
-  interestedIn: InterestedInEnum;
+  interestedIn!: InterestedInEnum;
 
   @IsEnum(LookingForEnum)
   @IsNotEmpty()
-  lookingFor: LookingForEnum;
+  lookingFor!: LookingForEnum;
 }

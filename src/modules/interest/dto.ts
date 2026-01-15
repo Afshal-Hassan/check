@@ -1,7 +1,7 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 export class InterestDTO {
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
   userId!: string;
 

@@ -60,8 +60,8 @@ export const getActiveUserByEmail = async (email: string): Promise<User | null> 
 //   };
 // };
 
-export const updateUserLocationById = async (data: UserDTO) => {
+export const updateUserLocation = async (data: UserDTO) => {
   const { userId, country, city, state } = data;
 
-  return updateLocationById(userId, country, city, state);
+  return updateLocationById(userId, { country, city, state });
 };

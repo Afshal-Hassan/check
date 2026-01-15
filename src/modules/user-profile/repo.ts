@@ -1,101 +1,40 @@
 import { UserProfile } from './model';
 import { AppDataSource } from '@/config/data-source';
-import { UserProfileTranslation } from './model.translation';
 
 export const UserProfileRepository = AppDataSource.getRepository(UserProfile);
 
-export const save = async (data: Partial<UserProfile>): Promise<UserProfile> => {
-  return AppDataSource.transaction(async (manager) => {
-    const UserProfileRepo = manager.getRepository(UserProfile);
-    const TranslationRepo = manager.getRepository(UserProfileTranslation);
-
-    const profile = UserProfileRepo.create({
-      userId: data.userId,
-      dateOfBirth: data.dateOfBirth,
-      occupation: data.occupation,
-      gender: data.gender,
-    });
-
-    const savedProfile = await UserProfileRepo.save(profile);
-
-    if (data.translations && data.translations.length > 0) {
-      const translations = data.translations.map(({ languageCode, bio }) => {
-        const translation = TranslationRepo.create({
-          bio: bio!,
-          languageCode: languageCode!,
-          userProfile: savedProfile,
-        });
-        return translation;
-      });
-
-      await TranslationRepo.save(translations);
-
-      savedProfile.translations = translations;
-    }
-
-    return savedProfile;
-  });
+export const save = async (userProfileData: Partial<UserProfile>): Promise<UserProfile> => {
+  const userProfile = UserProfileRepository.create(userProfileData);
+  return UserProfileRepository.save(userProfile);
 };
 
-export const updatePersonalDetailsById = async (
+export const updatePersonalDetailsByUserId = async (
   userId: string,
   data: Partial<UserProfile>,
 ): Promise<UserProfile> => {
-  return AppDataSource.transaction(async (manager) => {
-    const UserProfileRepo = manager.getRepository(UserProfile);
-    const TranslationRepo = manager.getRepository(UserProfileTranslation);
+  const updateData: Partial<UserProfile> = {};
 
-    const { translations, ...profileData } = data;
+  if (data.heightEn !== undefined) updateData.heightEn = data.heightEn;
+  if (data.heightFr !== undefined) updateData.heightFr = data.heightFr;
+  if (data.heightSp !== undefined) updateData.heightSp = data.heightSp;
+  if (data.heightAr !== undefined) updateData.heightAr = data.heightAr;
 
-    const profile = await UserProfileRepo.preload({
-      userId,
-      ...profileData,
-    });
+  if (data.bodyType !== undefined) updateData.bodyType = data.bodyType;
+  if (data.relationshipStatus !== undefined)
+    updateData.relationshipStatus = data.relationshipStatus;
+  if (data.childrenPreference !== undefined)
+    updateData.childrenPreference = data.childrenPreference;
 
-    if (!profile) {
-      throw new Error('User profile not found');
-    }
+  const result = await UserProfileRepository.createQueryBuilder()
+    .update(UserProfile)
+    .set(updateData)
+    .where('user_id = :userId', { userId })
+    .returning('*')
+    .execute();
 
-    /* Update profile fields */
-    if (profileData.bodyType !== undefined) profile.bodyType = profileData.bodyType;
+  if (!result.raw.length) {
+    throw new Error('User profile not found');
+  }
 
-    if (profileData.relationshipStatus !== undefined)
-      profile.relationshipStatus = profileData.relationshipStatus;
-
-    if (profileData.childrenPreference !== undefined)
-      profile.childrenPreference = profileData.childrenPreference;
-
-    await UserProfileRepo.save(profile);
-
-    /* Update HEIGHT ONLY */
-    if (translations?.length) {
-      const existingTranslations = await TranslationRepo.find({
-        where: { userProfile: { userId } },
-        relations: ['userProfile'],
-      });
-
-      const toSave = translations
-        .filter((t) => t.heightCm !== undefined)
-        .map((t) => {
-          const existing = existingTranslations.find((e) => e.languageCode === t.languageCode);
-
-          if (!existing) {
-            return TranslationRepo.create({
-              userProfile: profile,
-              languageCode: t.languageCode!,
-              heightCm: t.heightCm!,
-            });
-          }
-
-          existing.heightCm = t.heightCm!;
-          return existing;
-        });
-
-      if (toSave.length) {
-        await TranslationRepo.save(toSave);
-      }
-    }
-
-    return profile;
-  });
+  return result.raw[0] as UserProfile;
 };

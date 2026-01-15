@@ -1,24 +1,24 @@
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { DietEnum, PoliticalEnum, SmokingEnum, WorkoutEnum } from './enums';
 
 export class LifestylePreferenceDTO {
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
-  userId: string;
+  userId!: string;
 
   @IsEnum(SmokingEnum)
   @IsNotEmpty()
-  smoking: SmokingEnum;
+  smoking!: SmokingEnum;
 
   @IsEnum(PoliticalEnum)
   @IsNotEmpty()
-  politicalViews: PoliticalEnum;
+  politicalViews!: PoliticalEnum;
 
   @IsEnum(DietEnum)
   @IsNotEmpty()
-  diet: DietEnum;
+  diet!: DietEnum;
 
   @IsEnum(WorkoutEnum)
   @IsNotEmpty()
-  workoutRoutine: WorkoutEnum;
+  workoutRoutine!: WorkoutEnum;
 }

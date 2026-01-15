@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { save } from './controller';
 import { validateDTO } from '@/middleware';
 import { LifestylePreferenceDTO } from './dto';
+import { saveLifestylePreference } from './controller';
 
 const router = Router();
 
-router.post('/', validateDTO(LifestylePreferenceDTO), save);
+router.post('/', validateDTO(LifestylePreferenceDTO), saveLifestylePreference);
 
 export default router;
