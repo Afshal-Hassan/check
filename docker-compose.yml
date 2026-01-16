@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: node-express-app
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Database - Use RDS endpoint
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DATABASE_URL=${DATABASE_URL}
+      # OAuth
+      - GOOGLE_OAUTH_API_URL=${GOOGLE_OAUTH_API_URL}
+      # JWT
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      # Redis
+      - REDIS_URL=${REDIS_URL}
+      # SMTP
+      - SMTP_EMAIL_USER=${SMTP_EMAIL_USER}
+      - SMTP_EMAIL_PASSWORD=${SMTP_EMAIL_PASSWORD}
+      # OTP
+      - SIGNUP_OTP_EXPIRY_SECONDS=${SIGNUP_OTP_EXPIRY_SECONDS}
+      - FORGOT_PASSWORD_OTP_EXPIRY_SECONDS=${FORGOT_PASSWORD_OTP_EXPIRY_SECONDS}
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  # Migration service - runs once and exits
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: migration-runner
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - .env
+    command: npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/config/data-source.ts
+    networks:
+      - app-network
+    depends_on:
+      - app
+    restart: 'no'
+
+networks:
+  app-network:
+    driver: bridge

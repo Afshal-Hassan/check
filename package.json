@@ -17,7 +17,14 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "typeorm": "typeorm-ts-node-commonjs",
-    "prepare": "husky install"
+    "migrate:create": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:create",
+    "migrate:generate": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d src/config/data-source.ts",
+    "migrate:run": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d src/config/data-source.ts",
+    "migrate:revert": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/config/data-source.ts",
+    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production' && !process.env.CI) { require('husky').install() }\""
+  },
+  "_moduleAliases": {
+    "@": "dist"
   },
   "dependencies": {
     "@vitalets/google-translate-api": "^9.2.1",

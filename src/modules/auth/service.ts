@@ -1,3 +1,4 @@
+import { DeepPartial } from 'typeorm';
 import { OtpAction } from '@/constants';
 import * as JwtUtil from '@/utils/jwt.util';
 import * as OtpUtil from '@/utils/otp.util';
@@ -38,10 +39,11 @@ export const completeSignUp = async (data: CompleteSignupDto) => {
 
   const passwordHash = await PasswordUtil.hashPassword(password);
   const user = await UserService.saveUser({
-    fullName,
     email,
-    authType: AuthType.Email,
+    fullName,
     passwordHash,
+    role: { id: 2 } as DeepPartial<any>,
+    authType: AuthType.Email,
   });
 
   const token = JwtUtil.generateToken(user);
@@ -53,12 +55,12 @@ export const login = async (data: LoginDto) => {
   if (data.provider) {
     return loginWithSocial(data.provider, data.socialToken);
   } else {
-    return loginWithEmail(data.email, data.password);
+    return loginWithEmail(data.email, data.password, data.role);
   }
 };
 
-const loginWithEmail = async (email: string, password: string) => {
-  const user = await UserService.getActiveUserByEmail(email);
+const loginWithEmail = async (email: string, password: string, role: string) => {
+  const user = await UserService.getActiveUserByEmailAndRole(email, role);
 
   if (!user) {
     throw new Error('Invalid email');
@@ -106,6 +108,7 @@ const continueWithGoogle = async (accessToken: string) => {
       email: response.data.email,
       fullName: response.data.name,
       authType: AuthType.Social,
+      role: { id: 2 } as DeepPartial<any>,
     }));
 
   const token = JwtUtil.generateToken(user);

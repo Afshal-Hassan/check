@@ -7,6 +7,7 @@ import {
   findActiveUserByEmail,
   updateLocationById,
   updatePasswordByEmail,
+  findActiveUserByEmailAndRole,
 } from './repo';
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
@@ -15,6 +16,13 @@ export const getUserByEmail = async (email: string): Promise<User | null> => {
 
 export const getActiveUserByEmail = async (email: string): Promise<User | null> => {
   return findActiveUserByEmail(email);
+};
+
+export const getActiveUserByEmailAndRole = async (
+  email: string,
+  role: string,
+): Promise<User | null> => {
+  return findActiveUserByEmailAndRole(email, role);
 };
 
 export const getUsersList = async (isVerified: boolean, isSuspended: boolean): Promise<User[]> => {

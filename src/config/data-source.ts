@@ -1,5 +1,6 @@
 import path from 'path';
 import { DataSource } from 'typeorm';
+import { Role } from '@/modules/role/model';
 import { User } from '@/modules/user/model';
 import { Interest } from '@/modules/interest/model';
 import { UserPhoto } from '@/modules/user-photo/model';
@@ -17,6 +18,7 @@ export const AppDataSource = new DataSource({
   //   password: process.env.DB_PASSWORD,
   //   database: process.env.DB_NAME,
   entities: [
+    Role,
     User,
     UserPhoto,
     UserProfile,
@@ -25,12 +27,11 @@ export const AppDataSource = new DataSource({
     LifestylePreference,
     DatingPreference,
   ],
-  synchronize: true,
+  synchronize: false,
   ssl: {
     rejectUnauthorized: false,
   },
 
-  migrations: [path.join(__dirname, 'migrations', '*.ts')],
+  migrations: [path.join(__dirname, '..', '..', 'migrations', '*.ts')],
   subscribers: [],
-  migrationsTableName: 'typeorm_migrations',
 });

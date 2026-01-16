@@ -12,7 +12,7 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
-import { SocialProvider } from './enums';
+import { Role, SocialProvider } from './enums';
 
 export class SignupDto {
   @IsEmail({}, { message: 'Please provide a valid email address' })
@@ -47,11 +47,20 @@ export class CompleteSignupDto {
 }
 
 export class LoginDto {
+  /**
+   * User's email address.
+   * Required when logging in via email/password (i.e., when `provider` is not provided).
+   */
   @ValidateIf((o) => !o.provider)
   @IsEmail()
   email!: string;
 
-  @ValidateIf((o) => !o.provider)
+  /**
+   * User's password.
+   * Required when logging in via email/password (i.e., when `provider` is not provided).
+   * Must be 8–100 characters long and include at least one uppercase letter,
+   * one lowercase letter, one number, and one special character.
+   */ @ValidateIf((o) => !o.provider)
   @IsString({ message: 'Password must be a string' })
   @IsNotEmpty({ message: 'Password is required' })
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
@@ -62,10 +71,26 @@ export class LoginDto {
   })
   password!: string;
 
+  /**
+   * User's role.
+   * Always required. Must match one of the predefined enum values (e.g., 'admin', 'user').
+   */
+  @IsEnum(Role, { message: 'Role must be one of admin, user' })
+  @IsNotEmpty({ message: 'Role is required' })
+  role!: Role;
+
+  /**
+   * Optional social login provider.
+   * If provided, login will be performed using the specified provider instead of email/password.
+   */
   @IsOptional()
   @IsEnum(SocialProvider)
   provider!: SocialProvider;
 
+  /**
+   * Social login token.
+   * Required if a social `provider` is specified.
+   */
   @ValidateIf((o) => o.provider)
   @IsString()
   @IsNotEmpty()

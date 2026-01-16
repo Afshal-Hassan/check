@@ -1,10 +1,13 @@
+import { Role } from '@/modules/role/model';
 import { Interest } from '@/modules/interest/model';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -42,6 +45,10 @@ export class User {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
+
+  @OneToOne(() => Role, { nullable: false })
+  @JoinColumn({ name: 'role_id', referencedColumnName: 'id' })
+  role!: Role;
 
   @ManyToMany(() => Interest, (interest) => interest.users, { cascade: true })
   @JoinTable({

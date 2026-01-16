@@ -17,6 +17,20 @@ export const findActiveUserByEmail = async (email: string): Promise<User | null>
   });
 };
 
+export const findActiveUserByEmailAndRole = async (
+  email: string,
+  role: string,
+): Promise<User | null> => {
+  return UserRepository.findOne({
+    where: {
+      email,
+      isSuspended: false,
+      role: { name: role.toUpperCase() },
+    },
+    relations: ['role'],
+  });
+};
+
 export const save = async (userData: Partial<User>): Promise<User> => {
   const user = UserRepository.create(userData);
   return UserRepository.save(user);
