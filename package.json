@@ -1,13 +1,13 @@
 {
   "name": "look-a-like-match",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Enterprise-grade dating platform API built with Node.js, Express, TypeScript, and TypeORM",
   "main": "src/server.ts",
   "license": "UNLICENSED",
   "author": {
     "name": "Launchbox Global Team",
-    "email": "tech@loveconnect.com"
+    "email": "afshal.hassan@launchboxglobal.co"
   },
   "scripts": {
     "dev": "nodemon",
@@ -20,6 +20,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -57,7 +58,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourcompany/loveconnect-api.git"
+    "url": "https://github.com/LaunchBoxGlobal/LAL-backend.git"
   },
   "keywords": [
     "dating-app",
@@ -72,5 +73,8 @@
     "postgresql",
     "redis",
     "socket.io"
-  ]
+  ],
+  "bugs": {
+    "url": "https://github.com/LaunchBoxGlobal/LAL-Backend/issues"
+  }
 }

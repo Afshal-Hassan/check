@@ -1,7 +1,7 @@
-import { DeepPartial } from 'typeorm';
-import { DatingPreferenceDTO } from './dto';
-import { DatingPreference } from './model';
 import { save } from './repo';
+import { DeepPartial } from 'typeorm';
+import { DatingPreference } from './model';
+import { DatingPreferenceDTO } from './dto';
 
 export const saveDatingPreference = async (
   data: DatingPreferenceDTO,

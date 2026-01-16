@@ -8,18 +8,6 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
   return UserRepository.findOne({ where: { email } });
 };
 
-export const save = async (userData: Partial<User>): Promise<User> => {
-  const user = UserRepository.create(userData);
-  return UserRepository.save(user);
-};
-
-export const updatePasswordByEmail = async (
-  email: string,
-  hashedPassword: string,
-): Promise<UpdateResult> => {
-  return UserRepository.update({ email }, { passwordHash: hashedPassword });
-};
-
 export const findActiveUserByEmail = async (email: string): Promise<User | null> => {
   return UserRepository.findOne({
     where: {
@@ -27,6 +15,32 @@ export const findActiveUserByEmail = async (email: string): Promise<User | null>
       isSuspended: false,
     },
   });
+};
+
+export const save = async (userData: Partial<User>): Promise<User> => {
+  const user = UserRepository.create(userData);
+  return UserRepository.save(user);
+};
+
+export const getUsers = async (isVerified: boolean, isSuspended: boolean): Promise<User[]> => {
+  const queryBuilder = AppDataSource.getRepository(User).createQueryBuilder('user');
+
+  if (isVerified !== undefined) {
+    queryBuilder.andWhere('user.isVerified = :isVerified', { isVerified });
+  }
+
+  if (isSuspended !== undefined) {
+    queryBuilder.andWhere('user.isSuspended = :isSuspended', { isSuspended });
+  }
+
+  return queryBuilder.getMany();
+};
+
+export const updatePasswordByEmail = async (
+  email: string,
+  hashedPassword: string,
+): Promise<UpdateResult> => {
+  return UserRepository.update({ email }, { passwordHash: hashedPassword });
 };
 
 export const updateLocationById = async (userId: string, userData: Partial<User>) => {

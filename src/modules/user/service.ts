@@ -1,9 +1,10 @@
 import { User } from './model';
 import { UserDTO } from './dto';
 import {
-  findActiveUserByEmail,
-  findUserByEmail,
   save,
+  getUsers,
+  findUserByEmail,
+  findActiveUserByEmail,
   updateLocationById,
   updatePasswordByEmail,
 } from './repo';
@@ -12,16 +13,20 @@ export const getUserByEmail = async (email: string): Promise<User | null> => {
   return findUserByEmail(email);
 };
 
+export const getActiveUserByEmail = async (email: string): Promise<User | null> => {
+  return findActiveUserByEmail(email);
+};
+
+export const getUsersList = async (isVerified: boolean, isSuspended: boolean): Promise<User[]> => {
+  return getUsers(isVerified, isSuspended);
+};
+
 export const saveUser = async (userData: Partial<User>): Promise<User> => {
   return save(userData);
 };
 
 export const updateUserPassword = async (email: string, hashedPassword: string) => {
   return updatePasswordByEmail(email, hashedPassword);
-};
-
-export const getActiveUserByEmail = async (email: string): Promise<User | null> => {
-  return findActiveUserByEmail(email);
 };
 
 // export const updateUserAndProfile = async (data: UserDTO) => {
