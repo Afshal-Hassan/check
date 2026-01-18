@@ -1,11 +1,17 @@
+import { EntityManager } from 'typeorm';
 import { UserProfile } from './model';
 import { AppDataSource } from '@/config/data-source';
 
 export const UserProfileRepository = AppDataSource.getRepository(UserProfile);
 
-export const save = async (userProfileData: Partial<UserProfile>): Promise<UserProfile> => {
-  const userProfile = UserProfileRepository.create(userProfileData);
-  return UserProfileRepository.save(userProfile);
+export const save = async (
+  userProfileData: Partial<UserProfile>,
+  manager: EntityManager,
+): Promise<UserProfile> => {
+  const repo = manager ? manager.getRepository(UserProfile) : UserProfileRepository;
+  const userProfile = repo.create(userProfileData);
+
+  return repo.save(userProfile);
 };
 
 export const updatePersonalDetailsByUserId = async (

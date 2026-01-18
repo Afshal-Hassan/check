@@ -1,5 +1,5 @@
 import { User } from './model';
-import { UpdateResult } from 'typeorm';
+import { EntityManager, UpdateResult } from 'typeorm';
 import { AppDataSource } from '@/config/data-source';
 
 export const UserRepository = AppDataSource.getRepository(User);
@@ -57,13 +57,19 @@ export const updatePasswordByEmail = async (
   return UserRepository.update({ email }, { passwordHash: hashedPassword });
 };
 
-export const updateLocationById = async (userId: string, userData: Partial<User>) => {
-  const user = await UserRepository.preload({
+export const updateLocationById = async (
+  userId: string,
+  userData: Partial<User>,
+  manager: EntityManager,
+): Promise<User> => {
+  const repo = manager ? manager.getRepository(User) : UserRepository;
+
+  const user = await repo.preload({
     id: userId,
     ...userData,
   });
 
   if (!user) throw new Error('User not found');
 
-  return await UserRepository.save(user);
+  return repo.save(user);
 };

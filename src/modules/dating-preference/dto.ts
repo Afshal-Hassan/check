@@ -2,29 +2,33 @@ import { InterestedInEnum, LookingForEnum } from './enums';
 import { IsEnum, IsInt, IsNotEmpty, IsUUID, Max, Min } from 'class-validator';
 
 export class DatingPreferenceDTO {
-  @IsUUID()
-  @IsNotEmpty()
+  @IsUUID('4', { message: 'User ID must be a valid UUID' })
+  @IsNotEmpty({ message: 'User ID is required' })
   userId!: string;
 
-  @IsInt()
-  @Min(18)
-  @Max(80)
+  @IsInt({ message: 'Minimum age must be an integer' })
+  @Min(18, { message: 'Minimum age must be at least 18' })
+  @Max(80, { message: 'Minimum age cannot exceed 80' })
   minAge!: number;
 
-  @IsInt()
-  @Min(18)
-  @Max(80)
+  @IsInt({ message: 'Maximum age must be an integer' })
+  @Min(18, { message: 'Maximum age must be at least 18' })
+  @Max(80, { message: 'Maximum age cannot exceed 80' })
   maxAge!: number;
 
-  @IsInt()
-  @Min(1)
+  @IsInt({ message: 'Maximum distance must be an integer' })
+  @Min(1, { message: 'Maximum distance must be at least 1 km' })
   maxDistanceKm!: number;
 
-  @IsEnum(InterestedInEnum)
-  @IsNotEmpty()
+  @IsEnum(InterestedInEnum, {
+    message: `InterestedIn must be one of: ${Object.values(InterestedInEnum).join(', ')}`,
+  })
+  @IsNotEmpty({ message: 'InterestedIn field is required' })
   interestedIn!: InterestedInEnum;
 
-  @IsEnum(LookingForEnum)
-  @IsNotEmpty()
+  @IsEnum(LookingForEnum, {
+    message: `LookingFor must be one of: ${Object.values(LookingForEnum).join(', ')}`,
+  })
+  @IsNotEmpty({ message: 'LookingFor field is required' })
   lookingFor!: LookingForEnum;
 }

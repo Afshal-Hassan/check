@@ -1,5 +1,6 @@
 import { Role } from '@/modules/role/model';
 import { Interest } from '@/modules/interest/model';
+import { Language } from '@/modules/language/model';
 import {
   Column,
   CreateDateColumn,
@@ -57,4 +58,12 @@ export class User {
     inverseJoinColumn: { name: 'interest_id', referencedColumnName: 'id' },
   })
   interests!: Interest[];
+
+  @ManyToMany(() => Language, (language) => language.users, { cascade: true })
+  @JoinTable({
+    name: 'user_languages',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'language_id', referencedColumnName: 'id' },
+  })
+  languages!: Language[];
 }

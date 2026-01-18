@@ -17,7 +17,7 @@ export const completeSignup = async (req: Request, res: Response) => {
   try {
     const result = await AuthService.completeSignUp(req.body);
 
-    res.status(200).json({ message: 'Signup has been completed', ...result });
+    res.status(201).json({ message: 'Signup has been completed', ...result });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

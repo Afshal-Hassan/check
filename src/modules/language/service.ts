@@ -1,10 +1,10 @@
 import { save } from './repo';
 import { EntityManager } from 'typeorm';
 
-export const saveInterests = async (
+export const saveLanguages = async (
   data: {
     userId: string;
-    interests: string[];
+    languages: string[];
   },
   manager: EntityManager,
 ): Promise<void> => {

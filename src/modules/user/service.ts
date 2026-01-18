@@ -1,5 +1,10 @@
 import { User } from './model';
-import { UserDTO } from './dto';
+import { OnboardingDTO } from './dto';
+import { EntityManager } from 'typeorm';
+import { AppDataSource } from '@/config/data-source';
+import * as InterestService from '@/modules/interest/service';
+import * as LanguageService from '@/modules/language/service';
+import * as UserProfileService from '@/modules/user-profile/service';
 import {
   save,
   getUsers,
@@ -37,44 +42,45 @@ export const updateUserPassword = async (email: string, hashedPassword: string) 
   return updatePasswordByEmail(email, hashedPassword);
 };
 
-// export const updateUserAndProfile = async (data: UserDTO) => {
-//   const { userId, country, city, state, interests, ...userProfileData } = data;
+export const completeOnboarding = async (data: OnboardingDTO) => {
+  const queryRunner = AppDataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
-//   const user = await updateLocationByUserId(userId, country, city, state);
+  const { userId, location, profile, interests } = data;
 
-//   const { bio, dateOfBirth, gender, occupation } = userProfileData;
+  try {
+    const updatedUser = await updateUserLocation(userId, location, queryRunner.manager);
 
-//   const translations = [
-//     {
-//       userId,
-//       heightCm: 0,
-//       languageCode: 'en',
-//       bio,
-//     },
-//   ];
+    const savedProfile = await UserProfileService.saveUserProfile(
+      { userId, ...profile },
+      queryRunner.manager,
+    );
 
-//   const updatedProfile = await UserProfileService.saveUserProfile({
-//     userId,
-//     dateOfBirth,
-//     gender,
-//     occupation,
-//     translations,
-//   });
+    await InterestService.saveInterests({ userId, interests }, queryRunner.manager);
 
-//   const savedInterests = await InterestService.saveInterests(userId, interests);
+    await LanguageService.saveLanguages({ userId, languages: data.languages }, queryRunner.manager);
 
-//   return {
-//     ...user,
-//     passwordHash: undefined,
-//     bio: updatedProfile.translations?.find((t) => t.languageCode === 'en')?.bio,
-//     dateOfBirth: updatedProfile.dateOfBirth,
-//     gender: updatedProfile.gender,
-//     occupation: updatedProfile.occupation,
-//   };
-// };
+    await queryRunner.commitTransaction();
 
-export const updateUserLocation = async (data: UserDTO) => {
-  const { userId, country, city, state } = data;
+    return {
+      user: {
+        ...updatedUser,
+        passwordHash: undefined,
+      },
+      profile: savedProfile,
+    };
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
 
-  return updateLocationById(userId, { country, city, state });
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
+};
+
+const updateUserLocation = async (userId: string, user: Partial<User>, manager: EntityManager) => {
+  const { country, city, state } = user;
+
+  return updateLocationById(userId, { country, city, state }, manager);
 };

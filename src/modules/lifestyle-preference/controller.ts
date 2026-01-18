@@ -5,7 +5,7 @@ export const saveLifestylePreference = async (req: Request, res: Response) => {
   try {
     const result = await LifestylePreferenceService.saveLifestylePreference(req.body);
 
-    res.status(200).json({
+    res.status(201).json({
       message: 'Lifestyle preference saved successfully.',
       ...result,
     });

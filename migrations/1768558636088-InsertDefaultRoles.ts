@@ -5,8 +5,8 @@ export class InsertDefaultRoles1768558636088 implements MigrationInterface {
     await queryRunner.query(`
       INSERT INTO roles (id, name) 
       VALUES 
-        (uuid_generate_v4(), 'ADMIN'),
-        (uuid_generate_v4(), 'USER')
+        (1, 'ADMIN'),
+        (2, 'USER')
       ON CONFLICT (name) DO NOTHING;
     `);
   }

@@ -1,5 +1,6 @@
+import { GenderEnum } from '@/constants';
 import { User } from '@/modules/user/model';
-import { GenderEnum, BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
+import { BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('user_profiles')

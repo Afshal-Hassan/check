@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import * as UserPromptService from './service';
 
-export const saveUserPrompt = async (req: Request, res: Response) => {
+export const savePrompts = async (req: Request, res: Response) => {
   try {
-    const result = await UserPromptService.saveUserPrompt(req.body);
+    const result = await UserPromptService.savePrompts(req.body);
 
     res.status(201).json({
       message: 'User prompt has been saved successfully.',

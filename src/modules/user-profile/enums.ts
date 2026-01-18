@@ -1,11 +1,3 @@
-export enum GenderEnum {
-  MALE = 'male',
-  FEMALE = 'female',
-  NON_BINARY = 'non_binary',
-  OTHER = 'other',
-  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
-}
-
 export enum BodyTypeEnum {
   SLIM = 'slim',
   ATHLETIC = 'athletic',

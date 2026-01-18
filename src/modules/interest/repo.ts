@@ -1,13 +1,19 @@
 import { AppDataSource } from '@/config/data-source';
+import { EntityManager } from 'typeorm';
 
-export const save = async (userId: string, interestNames: string[]): Promise<void> => {
+export const save = async (
+  data: {
+    userId: string;
+    interests: string[];
+  },
+  manager: EntityManager,
+): Promise<void> => {
+  const { userId, interests: interestNames } = data;
+
   if (interestNames.length === 0) return;
 
-  const queryRunner = AppDataSource.createQueryRunner();
-  await queryRunner.connect();
-
   try {
-    await queryRunner.query(
+    await manager.query(
       `
       INSERT INTO interests (id, name)
       VALUES ${interestNames.map((_, i) => `(gen_random_uuid(), $${i + 1})`).join(', ')}
@@ -16,7 +22,7 @@ export const save = async (userId: string, interestNames: string[]): Promise<voi
       interestNames,
     );
 
-    await queryRunner.query(
+    await manager.query(
       `
       INSERT INTO user_interests (user_id, interest_id)
       SELECT $1, id 
@@ -26,7 +32,7 @@ export const save = async (userId: string, interestNames: string[]): Promise<voi
       `,
       [userId, interestNames],
     );
-  } finally {
-    await queryRunner.release();
+  } catch (error: any) {
+    throw new Error(`Failed to save interests: ${error.message}`);
   }
 };

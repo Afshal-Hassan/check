@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsEnum,
@@ -15,16 +16,19 @@ import {
 import { Role, SocialProvider } from './enums';
 
 export class SignupDto {
+  @Transform(({ value }) => value?.trim().toLowerCase())
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty({ message: 'Email is required' })
   email!: string;
 }
 
 export class CompleteSignupDto {
+  @Transform(({ value }) => value?.trim())
   @IsString({ message: 'Full name must be a string' })
   @IsNotEmpty({ message: 'Full name is required' })
   fullName!: string;
 
+  @Transform(({ value }) => value?.trim().toLowerCase())
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty({ message: 'Email is required' })
   email!: string;
@@ -51,6 +55,7 @@ export class LoginDto {
    * User's email address.
    * Required when logging in via email/password (i.e., when `provider` is not provided).
    */
+  @Transform(({ value }) => value?.trim().toLowerCase())
   @ValidateIf((o) => !o.provider)
   @IsEmail()
   email!: string;
@@ -60,7 +65,8 @@ export class LoginDto {
    * Required when logging in via email/password (i.e., when `provider` is not provided).
    * Must be 8–100 characters long and include at least one uppercase letter,
    * one lowercase letter, one number, and one special character.
-   */ @ValidateIf((o) => !o.provider)
+   */
+  @ValidateIf((o) => !o.provider)
   @IsString({ message: 'Password must be a string' })
   @IsNotEmpty({ message: 'Password is required' })
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
@@ -104,6 +110,7 @@ export class ForgotPasswordDto {
 }
 
 export class ResetPasswordDto {
+  @Transform(({ value }) => value?.trim().toLowerCase())
   @IsEmail()
   @IsNotEmpty()
   email!: string;

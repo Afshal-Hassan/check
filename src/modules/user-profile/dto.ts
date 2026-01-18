@@ -1,47 +1,33 @@
-import { GenderEnum, BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
+import { Transform } from 'class-transformer';
+import { BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
 import { IsDateString, IsEnum, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 
-export class UserProfileDTO {
-  @IsUUID()
-  @IsNotEmpty()
-  userId!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
-  bio!: string;
-
-  @IsDateString()
-  @IsNotEmpty()
-  dateOfBirth!: Date;
-
-  @IsString()
-  @IsNotEmpty()
-  occupation!: string;
-
-  @IsEnum(GenderEnum)
-  @IsNotEmpty()
-  gender!: GenderEnum;
-}
-
 export class PersonalDetailsDTO {
-  @IsUUID()
-  @IsNotEmpty()
+  @IsUUID('4', { message: 'User ID must be a valid UUID' })
+  @IsNotEmpty({ message: 'User ID is required' })
   userId!: string;
 
-  @IsEnum(BodyTypeEnum)
-  @IsNotEmpty()
+  @IsEnum(BodyTypeEnum, {
+    message: `Body type must be one of: ${Object.values(BodyTypeEnum).join(', ')}`,
+  })
+  @IsNotEmpty({ message: 'Body type is required' })
   bodyType!: BodyTypeEnum;
 
-  @IsEnum(RelationshipStatusEnum)
-  @IsNotEmpty()
+  @IsEnum(RelationshipStatusEnum, {
+    message: `Relationship status must be one of: ${Object.values(RelationshipStatusEnum).join(', ')}`,
+  })
+  @IsNotEmpty({ message: 'Relationship status is required' })
   relationshipStatus!: RelationshipStatusEnum;
 
-  @IsEnum(ChildrenEnum)
-  @IsNotEmpty()
+  @IsEnum(ChildrenEnum, {
+    message: `Children preference must be one of: ${Object.values(ChildrenEnum).join(', ')}`,
+  })
+  @IsNotEmpty({ message: 'Children preference is required' })
   childrenPreference!: ChildrenEnum;
 
-  @IsString()
-  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
+  @IsString({ message: 'Height must be a string' })
+  @IsNotEmpty({ message: 'Height is required' })
+  @MaxLength(10, { message: 'Height must be at most 10 characters' })
   height!: string;
 }

@@ -4,7 +4,7 @@ import * as DatingPreferenceService from './service';
 export const saveDatingPreference = async (req: Request, res: Response) => {
   try {
     const result = await DatingPreferenceService.saveDatingPreference(req.body);
-    res.status(200).json({
+    res.status(201).json({
       message: 'Dating preference saved successfully.',
       ...result,
     });

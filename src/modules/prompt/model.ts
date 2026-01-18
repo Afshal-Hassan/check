@@ -1,8 +1,8 @@
 import { User } from '@/modules/user/model';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('user_prompts')
-export class UserPrompt {
+@Entity('prompts')
+export class Prompt {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })
   id!: string;
 

@@ -1,26 +1,29 @@
 import { OtpAction } from '@/constants';
-import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEmail, IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class VerifyOtpDto {
-  @IsNotEmpty()
-  @IsEmail()
+  @Transform(({ value }) => value?.trim().toLowerCase())
+  @IsNotEmpty({ message: 'Email is required' })
+  @IsEmail({}, { message: 'Please provide a valid email address' })
   email!: string;
 
-  @IsNotEmpty()
-  @IsEnum(OtpAction)
+  @IsNotEmpty({ message: 'OTP Action is required' })
+  @IsEnum(OtpAction, { message: `Action must be one of: ${Object.values(OtpAction).join(', ')}` })
   action!: OtpAction;
 
-  @IsNotEmpty()
-  @IsNumber()
-  otp: number;
+  @IsNotEmpty({ message: 'OTP is required' })
+  @IsNumber({}, { message: 'OTP must be a number' })
+  otp!: number;
 }
 
 export class ResendOtpDto {
-  @IsNotEmpty()
-  @IsEmail()
+  @Transform(({ value }) => value?.trim().toLowerCase())
+  @IsNotEmpty({ message: 'Email is required' })
+  @IsEmail({}, { message: 'Please provide a valid email address' })
   email!: string;
 
-  @IsNotEmpty()
-  @IsEnum(OtpAction)
+  @IsNotEmpty({ message: 'OTP Action is required' })
+  @IsEnum(OtpAction, { message: `Action must be one of: ${Object.values(OtpAction).join(', ')}` })
   action!: OtpAction;
 }
