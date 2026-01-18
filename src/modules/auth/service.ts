@@ -23,7 +23,7 @@ export const signup = async (data: SignupDto) => {
     action: OtpAction.Signup,
     otp,
   });
-  await EmailUtil.sendOtpEmail(email, otp);
+  await EmailUtil.sendOtpEmail(email, OtpAction.Signup, otp);
 
   return { email };
 };
@@ -130,7 +130,7 @@ export const forgotPassword = async (data: ForgotPasswordDto) => {
     action: OtpAction.ForgotPassword,
     otp,
   });
-  await EmailUtil.sendOtpEmail(email, otp);
+  await EmailUtil.sendOtpEmail(email, OtpAction.ForgotPassword, otp);
 
   return { email };
 };

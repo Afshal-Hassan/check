@@ -12,7 +12,7 @@ export const resendOtp = async (resendOtpDto: ResendOtpDto) => {
   const otp = OtpUtil.generateOtp();
 
   await OtpUtil.storeOtpInRedis({ email, action, otp });
-  await EmailUtil.sendOtpEmail(email, otp);
+  await EmailUtil.sendOtpEmail(email, action, otp);
 
   return { email };
 };
