@@ -10,9 +10,9 @@ export class UserPhoto {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ name: 's3_url', type: 'text' })
-  s3Url!: string;
+  @Column({ name: 's3_key', type: 'text' })
+  s3Key!: string;
 
-  @Column({ name: 'order_index' })
-  orderIndex!: number;
+  @Column({ name: 'is_primary', default: false })
+  isPrimary!: boolean;
 }

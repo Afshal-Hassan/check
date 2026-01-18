@@ -1,10 +1,11 @@
-import { rekognitionClient } from '@/config/aws-rekognition.config';
-import * as UserService from './service';
-import { Request, Response } from 'express';
-import { CompareFacesCommand } from '@aws-sdk/client-rekognition';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { s3 } from '@/config/aws-s3.config';
 import { Readable } from 'stream';
+import * as UserService from './service';
+import { s3 } from '@/config/aws-s3.config';
+import { Request, Response } from 'express';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import * as UserPhotoService from '@/modules/user-photo/service';
+import { CompareFacesCommand } from '@aws-sdk/client-rekognition';
+import { rekognitionClient } from '@/config/aws-rekognition.config';
 
 export const getUsersList = async (req: Request, res: Response) => {
   try {
@@ -33,8 +34,14 @@ export const onboarding = async (req: Request, res: Response) => {
 
 export const uploadProfilePictures = async (req: Request, res: Response) => {
   try {
-    const files = req.files as Express.MulterS3.File[] | undefined;
-    const result = await UserService.uploadProfilePictures(files);
+    const files = req.files as
+      | {
+          profilePicture?: Express.MulterS3.File[];
+          images?: Express.MulterS3.File[];
+        }
+      | undefined;
+
+    const result = await UserService.uploadProfilePictures(req.body.userId, files);
 
     res.status(200).json({
       message: 'User images uploaded successfully.',
@@ -71,8 +78,11 @@ export const verifyUser = async (req: Request, res: Response) => {
 
     const verificationImageBuffer = file.buffer;
 
-    const sourceImageKey =
-      'users/0e8f7914-110b-415c-bab6-297e8c361ec6/images/8b2e9783-0c22-44b5-89c8-cabbd554d0d4';
+    const profilePicture = await UserPhotoService.getProfilePictureByUserId(req.body.userId);
+
+    if (!profilePicture) throw new Error('User profile picture not found');
+
+    const sourceImageKey = profilePicture.s3Key;
 
     // Convert S3 object to buffer properly
     const sourceImageBuffer = await s3ObjectToBuffer(
@@ -80,6 +90,7 @@ export const verifyUser = async (req: Request, res: Response) => {
       sourceImageKey,
     );
 
+    console.log(sourceImageKey);
     console.log(sourceImageBuffer);
     console.log(verificationImageBuffer);
 
@@ -106,6 +117,13 @@ export const verifyUser = async (req: Request, res: Response) => {
       res.status(401).json({ message: 'User verification failed' });
     }
   } catch (err: any) {
+    if (err.name === 'InvalidParameterException') {
+      return res.status(400).json({
+        error:
+          'AWS Rekognition cannot process one of the images. Make sure it is a valid JPEG/PNG with a clear face.',
+      });
+    }
+
     console.error('Error in verification:', err);
     res.status(500).json({ error: err.message });
   }

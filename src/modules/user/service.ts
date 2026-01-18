@@ -1,9 +1,10 @@
 import { User } from './model';
 import { OnboardingDTO } from './dto';
-import { EntityManager } from 'typeorm';
+import { DeepPartial, EntityManager } from 'typeorm';
 import { AppDataSource } from '@/config/data-source';
 import * as InterestService from '@/modules/interest/service';
 import * as LanguageService from '@/modules/language/service';
+import * as UserPhotoService from '@/modules/user-photo/service';
 import * as UserProfileService from '@/modules/user-profile/service';
 import {
   save,
@@ -13,7 +14,12 @@ import {
   updateLocationById,
   updatePasswordByEmail,
   findActiveUserByEmailAndRole,
+  findUserAndProfilePictureById,
 } from './repo';
+
+export const getUserAndProfilePictureById = async (userId: string) => {
+  return findUserAndProfilePictureById(userId);
+};
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
   return findUserByEmail(email);
@@ -85,14 +91,49 @@ const updateUserLocation = async (userId: string, user: Partial<User>, manager: 
   return updateLocationById(userId, { country, city, state }, manager);
 };
 
-export const uploadProfilePictures = async (files: Express.MulterS3.File[] | undefined) => {
-  if (!files || files.length === 0) {
-    throw new Error('No files uploaded');
+export const uploadProfilePictures = async (
+  userId: string,
+  files:
+    | {
+        profilePicture?: Express.MulterS3.File[];
+        images?: Express.MulterS3.File[];
+      }
+    | undefined,
+) => {
+  const user = await getUserAndProfilePictureById(userId);
+
+  if (!user) throw new Error('User not found');
+  if (user.hasProfilePicture) throw new Error('You have already uploaded picture');
+
+  if (!files) throw new Error('No files uploaded');
+
+  const { profilePicture, images } = files || {};
+
+  if (!profilePicture || profilePicture.length === 0) {
+    throw new Error('Profile picture is required');
   }
 
-  const keys = files.map((file: Express.MulterS3.File) => file.key);
+  if (!images || images.length === 0) throw new Error('Atleast one image is required');
 
-  return {
-    keys,
-  };
+  const photos: {
+    user: User;
+    s3Key: string;
+    isPrimary: boolean;
+  }[] = [];
+
+  photos.push({
+    user: { id: userId } as DeepPartial<any>,
+    s3Key: profilePicture?.[0].key,
+    isPrimary: true,
+  });
+
+  images.forEach((image) => {
+    photos.push({
+      user: { id: userId } as DeepPartial<any>,
+      s3Key: image.key,
+      isPrimary: false,
+    });
+  });
+
+  return UserPhotoService.savePhotos(photos);
 };

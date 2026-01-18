@@ -4,6 +4,25 @@ import { AppDataSource } from '@/config/data-source';
 
 export const UserRepository = AppDataSource.getRepository(User);
 
+export const findUserAndProfilePictureById = async (userId: string) => {
+  const result = await AppDataSource.getRepository(User)
+    .createQueryBuilder('user')
+    .select(['user.id'])
+    .leftJoin('user_photos', 'photo', 'photo.user_id = user.id AND photo.is_primary = :isPrimary', {
+      isPrimary: true,
+    })
+    .addSelect(['photo.id'])
+    .where('user.id = :userId', { userId })
+    .getRawOne();
+
+  if (!result) return null;
+
+  return {
+    id: result.user_id,
+    hasProfilePicture: !!result.photo_id,
+  };
+};
+
 export const findUserByEmail = async (email: string): Promise<User | null> => {
   return UserRepository.findOne({ where: { email } });
 };

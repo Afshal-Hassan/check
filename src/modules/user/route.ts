@@ -8,7 +8,14 @@ const router = Router();
 
 router.get('/all', getUsersList);
 router.post('/onboarding', validateDTO(OnboardingDTO), onboarding);
-router.post('/profile-pictures/upload', upload.array('images', 10), uploadProfilePictures);
+router.post(
+  '/pictures/upload',
+  upload.fields([
+    { name: 'profilePicture', maxCount: 1 },
+    { name: 'images', maxCount: 10 },
+  ]),
+  uploadProfilePictures,
+);
 router.post('/verify', uploadMemory.single('image'), verifyUser);
 
 export default router;
