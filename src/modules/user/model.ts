@@ -8,7 +8,7 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
-  OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -47,7 +47,7 @@ export class User {
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
-  @OneToOne(() => Role, { nullable: false })
+  @ManyToOne(() => Role, { nullable: false })
   @JoinColumn({ name: 'role_id', referencedColumnName: 'id' })
   role!: Role;
 
