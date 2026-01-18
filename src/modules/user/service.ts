@@ -84,3 +84,15 @@ const updateUserLocation = async (userId: string, user: Partial<User>, manager: 
 
   return updateLocationById(userId, { country, city, state }, manager);
 };
+
+export const uploadProfilePictures = async (files: Express.MulterS3.File[] | undefined) => {
+  if (!files || files.length === 0) {
+    throw new Error('No files uploaded');
+  }
+
+  const keys = files.map((file: Express.MulterS3.File) => file.key);
+
+  return {
+    keys,
+  };
+};
