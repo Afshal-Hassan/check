@@ -13,14 +13,16 @@ import { UserProfile } from '@/modules/user-profile/model';
 import { DatingPreference } from '@/modules/dating-preference/model';
 import { LifestylePreference } from '@/modules/lifestyle-preference/model';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL,
-  // host: process.env.DB_HOST || 'database-1.cnqgigacmiss.eu-north-1.rds.amazonaws.com',
-  // port: Number(process.env.DB_PORT) || 5432,
-  // username: process.env.DB_USERNAME || 'postgres',
-  // password: process.env.DB_PASSWORD || 'iTcjzyDi2WeqHX8',
-  // database: process.env.DB_DATABASE || 'look-a-like-match',
+  // url: process.env.DATABASE_URL,
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   entities: [
     Role,
     User,
@@ -33,8 +35,10 @@ export const AppDataSource = new DataSource({
     Language,
   ],
   synchronize: true,
-  ssl: false,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 
-  migrations: [path.join(__dirname, '..', '..', 'migrations', '*.ts')],
+  migrations: [path.join(__dirname, isProd ? '../migrations/*.js' : '../../migrations/*.ts')],
   subscribers: [],
 });
