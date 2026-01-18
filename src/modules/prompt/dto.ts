@@ -7,6 +7,7 @@ import {
   IsUUID,
   ValidateNested,
   MaxLength,
+  IsDefined,
 } from 'class-validator';
 
 export class PromptItemDTO {
@@ -28,6 +29,7 @@ export class PromptDTO {
   @IsNotEmpty({ message: 'User ID is required' })
   userId!: string;
 
+  @IsDefined({ message: 'prompts are required' })
   @IsArray({ message: 'Prompts must be an array' })
   @ArrayMinSize(1, { message: 'At least one prompt is required' })
   @ValidateNested({ each: true })

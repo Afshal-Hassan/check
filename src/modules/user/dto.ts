@@ -9,6 +9,7 @@ import {
   IsDateString,
   IsEnum,
   IsArray,
+  IsDefined,
 } from 'class-validator';
 
 class LocationDTO {
@@ -54,10 +55,12 @@ export class OnboardingDTO {
   @IsNotEmpty({ message: 'User ID is required' })
   userId!: string;
 
+  @IsDefined({ message: 'Location is required' })
   @ValidateNested()
   @Type(() => LocationDTO)
   location!: LocationDTO;
 
+  @IsDefined({ message: 'Profile is required' })
   @ValidateNested()
   @Type(() => ProfileDTO)
   profile!: ProfileDTO;

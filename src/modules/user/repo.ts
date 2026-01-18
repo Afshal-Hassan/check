@@ -4,6 +4,23 @@ import { AppDataSource } from '@/config/data-source';
 
 export const UserRepository = AppDataSource.getRepository(User);
 
+export const findUserAndProfileById = async (userId: string) => {
+  const result = await AppDataSource.getRepository(User)
+    .createQueryBuilder('user')
+    .select(['user.id'])
+    .leftJoin('user_profiles', 'profile', 'profile.user_id = user.id')
+    .addSelect(['profile.id'])
+    .where('user.id = :userId', { userId })
+    .getRawOne();
+
+  if (!result) return null;
+
+  return {
+    id: result.user_id,
+    hasProfile: !!result.profile_id,
+  };
+};
+
 export const findUserByEmail = async (email: string): Promise<User | null> => {
   return UserRepository.findOne({ where: { email } });
 };
