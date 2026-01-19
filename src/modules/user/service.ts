@@ -3,7 +3,6 @@ import { OnboardingDTO } from './dto';
 import { EntityManager } from 'typeorm';
 import { AppDataSource } from '@/config/data-source';
 import * as InterestService from '@/modules/interest/service';
-import * as LanguageService from '@/modules/language/service';
 import * as UserProfileService from '@/modules/user-profile/service';
 import {
   save,
@@ -67,8 +66,6 @@ export const completeOnboarding = async (data: OnboardingDTO) => {
     );
 
     await InterestService.saveInterests({ userId, interests }, queryRunner.manager);
-
-    await LanguageService.saveLanguages({ userId, languages: data.languages }, queryRunner.manager);
 
     await queryRunner.commitTransaction();
 

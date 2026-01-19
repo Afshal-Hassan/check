@@ -17,6 +17,7 @@ export const save = async (
 export const updatePersonalDetailsByUserId = async (
   userId: string,
   data: Partial<UserProfile>,
+  manager?: EntityManager,
 ): Promise<UserProfile> => {
   const updateData: Partial<UserProfile> = {};
 
@@ -31,7 +32,11 @@ export const updatePersonalDetailsByUserId = async (
   if (data.childrenPreference !== undefined)
     updateData.childrenPreference = data.childrenPreference;
 
-  const result = await UserProfileRepository.createQueryBuilder()
+  const queryBuilder = manager
+    ? manager.createQueryBuilder()
+    : UserProfileRepository.createQueryBuilder();
+
+  const result = await queryBuilder
     .update(UserProfile)
     .set(updateData)
     .where('user_id = :userId', { userId })

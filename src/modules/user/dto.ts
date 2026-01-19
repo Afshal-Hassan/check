@@ -70,10 +70,4 @@ export class OnboardingDTO {
   @IsNotEmpty({ each: true, message: 'Each interest is required' })
   @Transform(({ value }) => value?.map((v: any) => v?.trim()?.toLowerCase()))
   interests!: string[];
-
-  @IsArray({ message: 'Languages must be an array' })
-  @IsString({ each: true, message: 'Each language must be a string' })
-  @IsNotEmpty({ each: true, message: 'Each language is required' })
-  @Transform(({ value }) => value?.map((v: any) => v?.trim()?.toLowerCase()))
-  languages!: string[];
 }
