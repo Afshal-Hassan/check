@@ -1,18 +1,20 @@
 import { User } from './model';
 import { OnboardingDTO } from './dto';
 import { EntityManager } from 'typeorm';
+import { USER_ERROR_MESSAGES } from './message';
+import * as MessageUtil from '@/utils/message.util';
 import { AppDataSource } from '@/config/data-source';
 import * as InterestService from '@/modules/interest/service';
 import * as UserProfileService from '@/modules/user-profile/service';
 import {
   save,
-  getUsers,
   findUserByEmail,
   findActiveUserByEmail,
   updateLocationById,
   updatePasswordByEmail,
   findActiveUserByEmailAndRole,
   findUserAndProfileById,
+  findUsers,
 } from './repo';
 
 export const getUserAndProfileByUserId = async (userId: string) => {
@@ -27,15 +29,17 @@ export const getActiveUserByEmail = async (email: string): Promise<User | null> 
   return findActiveUserByEmail(email);
 };
 
-export const getActiveUserByEmailAndRole = async (
-  email: string,
-  role: string,
-): Promise<User | null> => {
+export const getActiveUserByEmailAndRole = async (email: string, role: string) => {
   return findActiveUserByEmailAndRole(email, role);
 };
 
-export const getUsersList = async (isVerified: boolean, isSuspended: boolean): Promise<User[]> => {
-  return getUsers(isVerified, isSuspended);
+export const getUsers = async (
+  page: number,
+  isVerified: boolean,
+  isSuspended: boolean,
+): Promise<User[]> => {
+  const { data } = await findUsers(page, isVerified, isSuspended);
+  return data;
 };
 
 export const saveUser = async (userData: Partial<User>): Promise<User> => {
@@ -46,7 +50,7 @@ export const updateUserPassword = async (email: string, hashedPassword: string) 
   return updatePasswordByEmail(email, hashedPassword);
 };
 
-export const completeOnboarding = async (data: OnboardingDTO) => {
+export const completeOnboarding = async (data: OnboardingDTO, languageCode: string) => {
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
@@ -56,8 +60,10 @@ export const completeOnboarding = async (data: OnboardingDTO) => {
   try {
     const user = await getUserAndProfileByUserId(userId);
 
-    if (user?.hasProfile) throw new Error('Profile already saved');
-
+    if (user?.hasProfile)
+      throw new Error(
+        MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.PROFILE_ALREADY_SAVED, languageCode),
+      );
     const updatedUser = await updateUserLocation(userId, location, queryRunner.manager);
 
     const savedProfile = await UserProfileService.saveUserProfile(

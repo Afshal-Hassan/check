@@ -1,14 +1,6 @@
 import { Transform } from 'class-transformer';
 import { BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
-import {
-  IsArray,
-  IsDateString,
-  IsEnum,
-  IsNotEmpty,
-  IsString,
-  IsUUID,
-  MaxLength,
-} from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class PersonalDetailsDTO {
   @IsUUID('4', { message: 'User ID must be a valid UUID' })

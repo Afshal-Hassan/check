@@ -34,18 +34,166 @@ export const findActiveUserByEmail = async (email: string): Promise<User | null>
   });
 };
 
-export const findActiveUserByEmailAndRole = async (
-  email: string,
-  role: string,
-): Promise<User | null> => {
-  return UserRepository.findOne({
-    where: {
-      email,
-      isSuspended: false,
-      role: { name: role.toUpperCase() },
+export const findActiveUserByEmailAndRole = async (email: string, role: string) => {
+  const qb = AppDataSource.createQueryBuilder(User, 'u')
+    /* ===================== JOINS ===================== */
+
+    // Role
+    .innerJoin('u.role', 'r')
+
+    // Profile
+    .leftJoin('user_profiles', 'up', 'up.user_id = u.id')
+
+    // Interests (many-to-many)
+    .leftJoin('user_interests', 'ui', 'ui.user_id = u.id')
+    .leftJoin('interests', 'i', 'i.id = ui.interest_id')
+
+    // Lifestyle
+    .leftJoin('lifestyle_preferences', 'lp', 'lp.user_id = u.id')
+
+    // Dating preference
+    .leftJoin('dating_preferences', 'dp', 'dp.user_id = u.id')
+
+    // Prompts
+    .leftJoin('prompts', 'p', 'p."user_id" = u.id')
+
+    /* ===================== FILTERS ===================== */
+
+    .where('u.email = :email', { email })
+    .andWhere('u.is_suspended = false')
+    .andWhere('r.name = :role', { role: role.toUpperCase() })
+
+    /* ===================== SELECT ===================== */
+
+    .select([
+      /* ---------- USER ---------- */
+      'u.id AS "userId"',
+      'u.email AS "email"',
+      'u.password_hash AS "passwordHash"',
+      'u.is_verified AS "isVerified"',
+      'u.is_suspended AS "isSuspended"',
+
+      /* ---------- PROFILE ---------- */
+      'up.bio_en AS "bioEn"',
+      'up.bio_fr AS "bioFr"',
+      'up.bio_sp AS "bioSp"',
+      'up.bio_ar AS "bioAr"',
+      'up.height_en AS "heightEn"',
+      'up.height_fr AS "heightFr"',
+      'up.height_sp AS "heightSp"',
+      'up.height_ar AS "heightAr"',
+      'up.date_of_birth AS "dateOfBirth"',
+      'up.occupation AS "occupation"',
+      'up.gender AS "gender"',
+      'up.body_type AS "bodyType"',
+      'up.relationship_status AS "relationshipStatus"',
+      'up.children_preference AS "childrenPreference"',
+
+      /* ---------- INTERESTS ---------- */
+      `
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', i.id,
+            'name', i.name
+          )
+        ) FILTER (WHERE i.id IS NOT NULL),
+        '[]'
+      ) AS "interests"
+      `,
+
+      /* ---------- LIFESTYLE ---------- */
+      'lp.smoking AS "smoking"',
+      'lp.political_views AS "politicalViews"',
+      'lp.diet AS "diet"',
+      'lp.workout_routine AS "workoutRoutine"',
+
+      /* ---------- DATING ---------- */
+      'dp.min_age AS "minAge"',
+      'dp.max_age AS "maxAge"',
+      'dp.max_distance_km AS "maxDistanceKm"',
+      'dp.interested_in AS "interestedIn"',
+      'dp.looking_for AS "lookingFor"',
+
+      /* ---------- PROMPTS ---------- */
+      `
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', p.id,
+            'question', p.question,
+            'answer', p.answer
+          )
+        ) FILTER (WHERE p.id IS NOT NULL),
+        '[]'
+      ) AS "prompts"
+      `,
+    ])
+
+    /* ===================== GROUP BY ===================== */
+
+    .groupBy(
+      `
+      u.id,
+      r.id,
+      up.id,
+      lp.id,
+      dp.id
+    `,
+    )
+
+    /* ===================== LIMIT ===================== */
+
+    .limit(1);
+
+  const result = await qb.getRawOne();
+  if (!result) return null;
+
+  /* ===================== MAPPING ===================== */
+
+  return {
+    id: result.userId,
+    email: result.email,
+    passwordHash: result.passwordHash,
+    isVerified: result.isVerified,
+    isSuspended: result.isSuspended,
+
+    profile: {
+      bioEn: result.bioEn,
+      bioFr: result.bioFr,
+      bioSp: result.bioSp,
+      bioAr: result.bioAr,
+      heightEn: result.heightEn,
+      heightFr: result.heightFr,
+      heightSp: result.heightSp,
+      heightAr: result.heightAr,
+      dateOfBirth: result.dateOfBirth,
+      occupation: result.occupation,
+      gender: result.gender,
+      bodyType: result.bodyType,
+      relationshipStatus: result.relationshipStatus,
+      childrenPreference: result.childrenPreference,
     },
-    relations: ['role'],
-  });
+
+    interests: result.interests,
+
+    lifestylePreference: {
+      smoking: result.smoking,
+      politicalViews: result.politicalViews,
+      diet: result.diet,
+      workoutRoutine: result.workoutRoutine,
+    },
+
+    datingPreference: {
+      minAge: result.minAge,
+      maxAge: result.maxAge,
+      maxDistanceKm: result.maxDistanceKm,
+      interestedIn: result.interestedIn,
+      lookingFor: result.lookingFor,
+    },
+
+    prompts: result.prompts.slice(0, 10),
+  };
 };
 
 export const save = async (userData: Partial<User>): Promise<User> => {
@@ -53,18 +201,47 @@ export const save = async (userData: Partial<User>): Promise<User> => {
   return UserRepository.save(user);
 };
 
-export const getUsers = async (isVerified: boolean, isSuspended: boolean): Promise<User[]> => {
-  const queryBuilder = AppDataSource.getRepository(User).createQueryBuilder('user');
+export const findUsers = async (
+  page = 1,
+  isVerified?: boolean,
+  isSuspended?: boolean,
+): Promise<{ data: any[]; total: number }> => {
+  const queryBuilder = AppDataSource.createQueryBuilder()
+    .select([
+      'u.id AS "userId"',
+      'u.email AS "email"',
+      'up.gender AS "gender"',
+      'up.occupation AS "occupation"',
+      `DATE_PART('year', AGE(up."dateOfBirth")) AS "age"`,
+      `COUNT(*) OVER() AS "total_count"` /* total count over the filtered rows */,
+    ])
+    .from('users', 'u')
+    .innerJoin('user_profiles', 'up', 'up."userId" = u.id');
 
+  // Conditional queries
   if (isVerified !== undefined) {
-    queryBuilder.andWhere('user.isVerified = :isVerified', { isVerified });
+    queryBuilder.andWhere('u."isVerified" = :isVerified', { isVerified });
   }
-
   if (isSuspended !== undefined) {
-    queryBuilder.andWhere('user.isSuspended = :isSuspended', { isSuspended });
+    queryBuilder.andWhere('u."isSuspended" = :isSuspended', { isSuspended });
   }
 
-  return queryBuilder.getMany();
+  /* Pagination */
+  queryBuilder.offset((page - 1) * 10).limit(10);
+
+  const rawData = await queryBuilder.getRawMany();
+
+  const total = rawData.length > 0 ? Number(rawData[0].total_count) : 0;
+
+  const data = rawData.map((row) => ({
+    userId: row.userId,
+    email: row.email,
+    gender: row.gender,
+    occupation: row.occupation,
+    age: Number(row.age),
+  }));
+
+  return { data, total };
 };
 
 export const updatePasswordByEmail = async (

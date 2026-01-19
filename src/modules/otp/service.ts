@@ -2,8 +2,8 @@ import * as OtpUtil from '@/utils/otp.util';
 import * as EmailUtil from '@/utils/email.util';
 import { ResendOtpDto, VerifyOtpDto } from './dto';
 
-export const verifyOtp = async (data: VerifyOtpDto): Promise<void> => {
-  return OtpUtil.verifyOtp(data);
+export const verifyOtp = async (data: VerifyOtpDto, languageCode: string): Promise<void> => {
+  return OtpUtil.verifyOtp({ ...data, languageCode });
 };
 
 export const resendOtp = async (resendOtpDto: ResendOtpDto) => {
