@@ -3,7 +3,7 @@ name: Deploy Backend to EC2
 on:
   push:
     branches:
-      - dev # deploy only when dev branch is pushed
+      - dev
 
 jobs:
   deploy:
@@ -13,82 +13,72 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup SSH on the GitHub runner
       - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          # Verify the key format
-          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null || (echo "Invalid SSH key format" && exit 1)
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      # Stop PM2 process if it exists
+      - name: Add known hosts
+        run: ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Test SSH Connection
+        run: |
+          echo "Testing SSH connection..."
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH connection successful!'"
+
       - name: Stop PM2 app
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e
             APP_NAME=look-a-like-match-backend
             echo "Stopping PM2 app..."
             pm2 delete $APP_NAME || true
           EOF
 
-      # Remove old project directory
       - name: Remove old directory
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            APP_DIR=/home/ubuntu/check
+            cd ~
             echo "Removing old directory..."
-            rm -rf $APP_DIR
+            rm -rf check
           EOF
 
-      # Clone repository on EC2
       - name: Clone repository
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            APP_NAME=check
+            cd ~
             echo "Cloning repository..."
-            git clone git@github.com:Afshal-Hassan/$APP_NAME.git
+            git clone git@github.com:Afshal-Hassan/check.git
           EOF
 
-      # Install dependencies
       - name: Install dependencies
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            APP_DIR=/home/ubuntu/check
-            cd $APP_DIR
+            cd ~/check
             echo "Installing npm dependencies..."
             npm install
           EOF
 
-      # Copy .env file
       - name: Copy environment file
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            APP_DIR=/home/ubuntu/check
-            ENV_DIR=/home/ubuntu/env
-            cd $APP_DIR
+            cd ~/check
             echo "Copying .env file..."
-            cp $ENV_DIR/.env .env
+            cp ~/env/.env .env
           EOF
 
-      # Build the project
       - name: Build project
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            APP_DIR=/home/ubuntu/check
-            cd $APP_DIR
+            cd ~/check
             echo "Building application..."
             npm run build
           EOF
 
-      # Start PM2 process
       - name: Start PM2 app
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~/check
             APP_NAME=look-a-like-match-backend
-            APP_DIR=/home/ubuntu/check
-            cd $APP_DIR
             echo "Starting PM2 app..."
             pm2 start dist/server.js --name $APP_NAME
             pm2 save
