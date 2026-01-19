@@ -29,9 +29,26 @@ export const validateDTO =
     next();
   };
 
-const formatValidationErrors = (errors: ValidationError[]) => {
-  return errors.map((error) => ({
-    field: error.property,
-    message: Object.values(error.constraints || {}).join(', '),
-  }));
+export const formatValidationErrors = (
+  errors: ValidationError[],
+  parentPath = '',
+): { field: string; message: string }[] => {
+  const result: { field: string; message: string }[] = [];
+
+  for (const error of errors) {
+    const fieldPath = parentPath ? `${parentPath}.${error.property}` : error.property;
+
+    if (error.constraints) {
+      result.push({
+        field: fieldPath,
+        message: Object.values(error.constraints).join(', '),
+      });
+    }
+
+    if (error.children && error.children.length > 0) {
+      result.push(...formatValidationErrors(error.children, fieldPath));
+    }
+  }
+
+  return result;
 };

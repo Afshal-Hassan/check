@@ -13,7 +13,12 @@ import {
   updateLocationById,
   updatePasswordByEmail,
   findActiveUserByEmailAndRole,
+  findUserAndProfileById,
 } from './repo';
+
+export const getUserAndProfileByUserId = async (userId: string) => {
+  return findUserAndProfileById(userId);
+};
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
   return findUserByEmail(email);
@@ -50,6 +55,10 @@ export const completeOnboarding = async (data: OnboardingDTO) => {
   const { userId, location, profile, interests } = data;
 
   try {
+    const user = await getUserAndProfileByUserId(userId);
+
+    if (user?.hasProfile) throw new Error('Profile already saved');
+
     const updatedUser = await updateUserLocation(userId, location, queryRunner.manager);
 
     const savedProfile = await UserProfileService.saveUserProfile(
