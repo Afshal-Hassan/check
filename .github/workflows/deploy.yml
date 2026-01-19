@@ -19,6 +19,8 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+          # Verify the key format
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null || (echo "Invalid SSH key format" && exit 1)
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
       # Stop PM2 process if it exists
@@ -93,4 +95,4 @@ jobs:
           EOF
 
       - name: Deployment complete
-        run: echo "✅ Deployment completed successfully!"
+        run: echo "Deployment completed successfully!"
