@@ -66,16 +66,24 @@ export const completeSignUp = async (data: CompleteSignupDto, languageCode: stri
 
 export const login = async (data: LoginDto, languageCode: string) => {
   if (data.provider) {
-    return loginWithSocial(data.provider, data.socialToken, languageCode);
+    return loginWithSocial(
+      { provider: data.provider, socialToken: data.socialToken },
+      languageCode,
+    );
   } else {
-    return loginWithEmail(data.email, data.password, data.role, languageCode);
+    return loginWithEmail(
+      {
+        email: data.email,
+        password: data.password,
+        role: data.role,
+      },
+      languageCode,
+    );
   }
 };
 
 const loginWithEmail = async (
-  email: string,
-  password: string,
-  role: string,
+  { email, password, role }: { email: string; password: string; role: string },
   languageCode: string,
 ) => {
   const userDetails = await UserService.getActiveUserByEmailAndRole(email, role);
@@ -100,13 +108,12 @@ const loginWithEmail = async (
 };
 
 const loginWithSocial = async (
-  provider: SocialProvider,
-  socialToken: string,
+  { provider, socialToken }: { provider: SocialProvider; socialToken: string },
   languageCode: string,
 ) => {
   switch (provider) {
     case SocialProvider.Google:
-      return continueWithGoogle(socialToken, languageCode);
+      return continueWithGoogle({ accessToken: socialToken }, languageCode);
     case SocialProvider.Apple:
       throw new Error('Apple login not implemented');
     default:
@@ -114,7 +121,10 @@ const loginWithSocial = async (
   }
 };
 
-const continueWithGoogle = async (accessToken: string, languageCode: string) => {
+const continueWithGoogle = async (
+  { accessToken }: { accessToken: string },
+  languageCode: string,
+) => {
   console.log('accessToken:', accessToken);
   const response = await GoogleClient.verifyToken(accessToken);
 

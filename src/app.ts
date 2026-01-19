@@ -5,10 +5,10 @@ import userRoutes from '@/modules/user/route';
 import authRoutes from '@/modules/auth/route';
 import { globalErrorHandler } from '@/middleware';
 import promptRoutes from '@/modules/prompt/route';
+import { authenticate, authorize } from './auth.middleware';
 import userProfileRoutes from '@/modules/user-profile/route';
 import datingPreferenceRoutes from '@/modules/dating-preference/route';
 import lifestylePreferenceRoutes from '@/modules/lifestyle-preference/route';
-import { authenticate, authorize } from './auth.middleware';
 
 const app = express();
 
@@ -22,8 +22,8 @@ app.get('/health', (_, res) => {
 });
 
 /* *****   Authentication & Authorization   ***** */
-// app.use(authenticate);
-// app.use(authorize);
+app.use(authenticate);
+app.use(authorize);
 
 /* *****   Routes   ***** */
 app.use('/auth', authRoutes);

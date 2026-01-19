@@ -51,7 +51,13 @@ export const AUTH_MIDDLEWARE_ERROR_MESSAGES = {
 };
 
 const ADMIN_ROUTES = ['/users/all'];
-const PUBLIC_ROUTES = ['/login', '/signup'];
+const PUBLIC_ROUTES = [
+  '/auth/login',
+  '/auth/signup',
+  '/auth/complete-signup',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+];
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (PUBLIC_ROUTES.some((route) => req.path.includes(route))) {
