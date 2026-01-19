@@ -1,11 +1,18 @@
 import * as UserService from './service';
 import { Request, Response } from 'express';
+import { USER_SUCCESS_MESSAGES } from './message';
+import * as HeaderUtil from '@/utils/header.util';
+import * as MessageUtil from '@/utils/message.util';
 
-export const getUsersList = async (req: Request, res: Response) => {
+export const getUsers = async (req: Request, res: Response) => {
   try {
-    const { isVerified, isSuspended } = req.query;
+    const { page, isVerified, isSuspended } = req.query;
 
-    const users = await UserService.getUsersList(isVerified === 'true', isSuspended === 'true');
+    const users = await UserService.getUsers(
+      Number(page),
+      isVerified === 'true',
+      isSuspended === 'true',
+    );
 
     res.status(200).json(users);
   } catch (err: any) {
@@ -15,10 +22,14 @@ export const getUsersList = async (req: Request, res: Response) => {
 
 export const onboarding = async (req: Request, res: Response) => {
   try {
-    const result = await UserService.completeOnboarding(req.body);
+    const languageCode = HeaderUtil.getLanguageCode(req);
+    const result = await UserService.completeOnboarding(req.body, languageCode);
 
     res.status(201).json({
-      message: 'User onboarding complete successfully.',
+      message: MessageUtil.getLocalizedMessage(
+        USER_SUCCESS_MESSAGES.ONBOARDING_COMPLETE,
+        languageCode,
+      ),
       result,
     });
   } catch (err: any) {

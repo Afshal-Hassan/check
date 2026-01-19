@@ -1,5 +1,5 @@
 import { User } from '@/modules/user/model';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('prompts')
 export class Prompt {
@@ -7,6 +7,7 @@ export class Prompt {
   id!: string;
 
   @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user!: User;
 
   @Column({ name: 'question' })

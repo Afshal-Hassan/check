@@ -1,12 +1,19 @@
 import { Request, Response } from 'express';
+import * as HeaderUtil from '@/utils/header.util';
+import * as MessageUtil from '@/utils/message.util';
 import * as LifestylePreferenceService from './service';
+import { LIFESTYLE_PREFERENCE_SUCCESS_MESSAGES } from './message';
 
 export const saveLifestylePreference = async (req: Request, res: Response) => {
   try {
-    const result = await LifestylePreferenceService.saveLifestylePreference(req.body);
+    const languageCode = HeaderUtil.getLanguageCode(req);
+    const result = await LifestylePreferenceService.saveLifestylePreference(req.body, languageCode);
 
     res.status(201).json({
-      message: 'Lifestyle preference saved successfully.',
+      message: MessageUtil.getLocalizedMessage(
+        LIFESTYLE_PREFERENCE_SUCCESS_MESSAGES.SAVED,
+        languageCode,
+      ),
       ...result,
     });
   } catch (err: any) {

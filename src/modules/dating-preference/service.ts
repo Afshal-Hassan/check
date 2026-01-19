@@ -1,7 +1,9 @@
-import { findDatingPreferenceByUserId, save } from './repo';
 import { DeepPartial } from 'typeorm';
 import { DatingPreference } from './model';
 import { DatingPreferenceDTO } from './dto';
+import * as MessageUtil from '@/utils/message.util';
+import { findDatingPreferenceByUserId, save } from './repo';
+import { DATING_PREFERENCE_ERROR_MESSAGES } from './message';
 
 export const getDatingPreferenceByUserId = async (
   userId: string,
@@ -11,10 +13,14 @@ export const getDatingPreferenceByUserId = async (
 
 export const saveDatingPreference = async (
   data: DatingPreferenceDTO,
+  languageCode: string,
 ): Promise<DatingPreference> => {
   const datingPreference = await getDatingPreferenceByUserId(data.userId);
 
-  if (datingPreference) throw new Error('Dating preference already saved');
+  if (datingPreference)
+    throw new Error(
+      MessageUtil.getLocalizedMessage(DATING_PREFERENCE_ERROR_MESSAGES.ALREADY_SAVED, languageCode),
+    );
 
   return save({
     user: { id: data.userId } as DeepPartial<any>,

@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 import { BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
-import { IsDateString, IsEnum, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class PersonalDetailsDTO {
   @IsUUID('4', { message: 'User ID must be a valid UUID' })
@@ -30,4 +30,10 @@ export class PersonalDetailsDTO {
   @IsNotEmpty({ message: 'Height is required' })
   @MaxLength(10, { message: 'Height must be at most 10 characters' })
   height!: string;
+
+  @IsArray({ message: 'Languages must be an array' })
+  @IsString({ each: true, message: 'Each language must be a string' })
+  @IsNotEmpty({ each: true, message: 'Each language is required' })
+  @Transform(({ value }) => value?.map((v: any) => v?.trim()?.toLowerCase()))
+  languages!: string[];
 }

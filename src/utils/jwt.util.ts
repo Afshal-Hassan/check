@@ -10,7 +10,7 @@ interface TokenPayload {
   userId: string;
 }
 
-export const generateToken = (user: User): string => {
+export const generateToken = (user: User, role: string): string => {
   const secret = process.env.JWT_SECRET;
   const expiresIn: any = process.env.JWT_EXPIRES_IN || '30d';
 
@@ -22,7 +22,7 @@ export const generateToken = (user: User): string => {
     expiresIn,
   };
 
-  return jwt.sign({ userId: user.id, email: user.email }, secret, options);
+  return jwt.sign({ userId: user.id, email: user.email, role }, secret, options);
 };
 
 export const verifyToken = (token: string): TokenPayload => {

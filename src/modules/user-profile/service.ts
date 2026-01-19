@@ -2,7 +2,9 @@ import { UserProfile } from './model';
 import { GenderEnum } from '@/constants';
 import { PersonalDetailsDTO } from './dto';
 import { DeepPartial, EntityManager } from 'typeorm';
+import { AppDataSource } from '@/config/data-source';
 import { save, updatePersonalDetailsByUserId } from './repo';
+import * as LanguageService from '@/modules/language/service';
 import * as GoogleTranslateUtil from '@/utils/google-translate.util';
 
 export const saveUserProfile = async (
@@ -44,13 +46,31 @@ export const updatePersonalDetails = async (
   const heightSp = await GoogleTranslateUtil.translateText(data.height, 'es');
   const heightAr = await GoogleTranslateUtil.translateText(data.height, 'ar');
 
-  return updatePersonalDetailsByUserId(userId, {
-    bodyType: data.bodyType,
-    relationshipStatus: data.relationshipStatus,
-    childrenPreference: data.childrenPreference,
-    heightEn,
-    heightFr,
-    heightSp,
-    heightAr,
-  });
+  const queryRunner = AppDataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    await LanguageService.saveLanguages({ userId, languages: data.languages }, queryRunner.manager);
+
+    const updatedProfile = await updatePersonalDetailsByUserId(userId, {
+      bodyType: data.bodyType,
+      relationshipStatus: data.relationshipStatus,
+      childrenPreference: data.childrenPreference,
+      heightEn,
+      heightFr,
+      heightSp,
+      heightAr,
+    });
+
+    await queryRunner.commitTransaction();
+
+    return updatedProfile;
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
 };
