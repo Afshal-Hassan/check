@@ -91,8 +91,13 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
     .select([
       /* ---------- USER ---------- */
       'u.id AS "userId"',
+      'u.full_name AS "fullName"',
       'u.email AS "email"',
       'u.password_hash AS "passwordHash"',
+      'u.country AS "country"',
+      'u.state AS "state"',
+      'u.city AS "city"',
+      'u.auth_type AS "authType"',
       'u.is_verified AS "isVerified"',
       'u.is_suspended AS "isSuspended"',
 
@@ -191,47 +196,61 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
   return {
     id: result.userId,
     email: result.email,
+    fullName: result.fullName,
     passwordHash: result.passwordHash,
+    country: result.country,
+    state: result.state,
+    city: result.city,
+    authType: result.authType,
     isVerified: result.isVerified,
     isSuspended: result.isSuspended,
 
-    profile: {
-      bioEn: result.bioEn,
-      bioFr: result.bioFr,
-      bioSp: result.bioSp,
-      bioAr: result.bioAr,
-      heightEn: result.heightEn,
-      heightFr: result.heightFr,
-      heightSp: result.heightSp,
-      heightAr: result.heightAr,
-      dateOfBirth: result.dateOfBirth,
-      occupation: result.occupation,
-      gender: result.gender,
-      bodyType: result.bodyType,
-      relationshipStatus: result.relationshipStatus,
-      childrenPreference: result.childrenPreference,
-    },
+    profile:
+      result.bioEn === null
+        ? null
+        : {
+            bioEn: result.bioEn,
+            bioFr: result.bioFr,
+            bioSp: result.bioSp,
+            bioAr: result.bioAr,
+            heightEn: result.heightEn,
+            heightFr: result.heightFr,
+            heightSp: result.heightSp,
+            heightAr: result.heightAr,
+            dateOfBirth: result.dateOfBirth,
+            occupation: result.occupation,
+            gender: result.gender,
+            bodyType: result.bodyType,
+            relationshipStatus: result.relationshipStatus,
+            childrenPreference: result.childrenPreference,
+          },
 
-    interests: result.interests,
+    interests: result.interests.length === 0 ? null : result.interests,
 
-    lifestylePreference: {
-      smoking: result.smoking,
-      politicalViews: result.politicalViews,
-      diet: result.diet,
-      workoutRoutine: result.workoutRoutine,
-    },
+    lifestylePreference:
+      result.smoking === null
+        ? null
+        : {
+            smoking: result.smoking,
+            politicalViews: result.politicalViews,
+            diet: result.diet,
+            workoutRoutine: result.workoutRoutine,
+          },
 
-    datingPreference: {
-      minAge: result.minAge,
-      maxAge: result.maxAge,
-      maxDistanceKm: result.maxDistanceKm,
-      interestedIn: result.interestedIn,
-      lookingFor: result.lookingFor,
-    },
+    datingPreference:
+      result.minAge === null
+        ? null
+        : {
+            minAge: result.minAge,
+            maxAge: result.maxAge,
+            maxDistanceKm: result.maxDistanceKm,
+            interestedIn: result.interestedIn,
+            lookingFor: result.lookingFor,
+          },
 
-    prompts: result.prompts.slice(0, 10),
+    prompts: result.prompts.length === 0 ? null : result.prompts,
 
-    photos: result.photos,
+    photos: result.photos.length === 0 ? null : result.photos,
   };
 };
 

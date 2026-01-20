@@ -29,7 +29,7 @@ class PromptItemDTO {
 export class SavePromptDTO {
   @IsDefined({ message: 'Prompts are required' })
   @IsArray({ message: 'Prompts must be an array' })
-  @ArrayMinSize(1, { message: 'At least one prompt is required' })
+  @ArrayMinSize(3, { message: 'At least three prompt is required' })
   @ValidateNested({ each: true })
   @Type(() => PromptItemDTO)
   prompts!: PromptItemDTO[];
