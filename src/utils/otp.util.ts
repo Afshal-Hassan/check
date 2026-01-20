@@ -1,11 +1,27 @@
-import redisClient from '@/config/redis.config';
 import { OtpAction } from '@/constants';
+import redisClient from '@/config/redis.config';
+import * as MessageUtil from '@/utils/message.util';
 
 interface StoreOtpParams {
   email: string;
   action: string;
   otp: string;
 }
+
+export const OTP_ERROR_MESSAGES = {
+  EXPIRED_OR_NOT_EXIST: {
+    en: 'OTP has expired or does not exist',
+    fr: "Le OTP a expiré ou n'existe pas",
+    es: 'El OTP ha expirado o no existe',
+    ar: 'انتهت صلاحية رمز OTP أو غير موجود',
+  },
+  INVALID: {
+    en: 'Invalid OTP',
+    fr: 'OTP invalide',
+    es: 'OTP inválido',
+    ar: 'رمز OTP غير صالح',
+  },
+};
 
 export const generateOtp = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -25,16 +41,22 @@ export const verifyOtp = async ({
   email,
   action,
   otp,
+  languageCode,
 }: {
   email: string;
   action: string;
   otp: number;
+  languageCode: string;
 }): Promise<void> => {
   const otpKey = `otp:${email}:${action}`;
   const storedOtp = await redisClient.get(otpKey);
 
-  if (!storedOtp) throw new Error('OTP has expired or does not exist');
-  if (Number(storedOtp) !== otp) throw new Error('Invalid OTP');
+  if (!storedOtp)
+    throw new Error(
+      MessageUtil.getLocalizedMessage(OTP_ERROR_MESSAGES.EXPIRED_OR_NOT_EXIST, languageCode),
+    );
 
+  if (Number(storedOtp) !== otp)
+    throw new Error(MessageUtil.getLocalizedMessage(OTP_ERROR_MESSAGES.INVALID, languageCode));
   await redisClient.del(otpKey);
 };

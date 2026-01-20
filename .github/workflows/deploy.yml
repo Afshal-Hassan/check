@@ -1,0 +1,100 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Add known hosts
+        run: ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Test SSH Connection
+        run: |
+          echo "Testing SSH connection..."
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH connection successful!'"
+
+      - name: Stop PM2 app
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            APP_NAME=look-a-like-match-backend
+            echo "Stopping PM2 app..."
+            pm2 delete $APP_NAME || true
+          EOF
+
+      - name: Remove old directory
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~
+            echo "Removing old directory..."
+            rm -rf check
+          EOF
+
+      - name: Clone repository
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~
+            echo "Cloning repository..."
+            git clone git@github.com:Afshal-Hassan/check.git
+          EOF
+
+      - name: Install dependencies
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            cd ~/check
+            echo "Installing npm dependencies..."
+            npm install
+          EOF
+
+      - name: Copy environment file
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~/check
+            echo "Copying .env file..."
+            cp ~/env/.env .env
+          EOF
+
+      - name: Build project
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            cd ~/check
+            echo "Building application..."
+            npm run build
+          EOF
+
+      - name: Start PM2 app
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            cd ~/check
+            APP_NAME=look-a-like-match-backend
+            echo "Starting PM2 app..."
+            pm2 start dist/server.js --name $APP_NAME
+            pm2 save
+          EOF
+
+      - name: Deployment complete
+        run: echo "Deployment completed successfully!"

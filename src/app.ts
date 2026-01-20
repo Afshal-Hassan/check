@@ -5,6 +5,7 @@ import userRoutes from '@/modules/user/route';
 import authRoutes from '@/modules/auth/route';
 import { globalErrorHandler } from '@/middleware';
 import promptRoutes from '@/modules/prompt/route';
+import { authenticate, authorize } from './auth.middleware';
 import userProfileRoutes from '@/modules/user-profile/route';
 import datingPreferenceRoutes from '@/modules/dating-preference/route';
 import lifestylePreferenceRoutes from '@/modules/lifestyle-preference/route';
@@ -19,6 +20,10 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (_, res) => {
   res.status(200).json({ status: 'ok', environment: process.env.NODE_ENV || 'development' });
 });
+
+/* *****   Authentication & Authorization   ***** */
+app.use(authenticate);
+app.use(authorize);
 
 /* *****   Routes   ***** */
 app.use('/auth', authRoutes);

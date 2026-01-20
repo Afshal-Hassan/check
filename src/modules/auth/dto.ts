@@ -79,8 +79,10 @@ export class LoginDto {
 
   /**
    * User's role.
-   * Always required. Must match one of the predefined enum values (e.g., 'admin', 'user').
+   * Required when logging in via email/password (i.e., when `provider` is not provided).
+   * Must match one of the predefined enum values (e.g., 'admin', 'user').
    */
+  @ValidateIf((o) => !o.provider)
   @IsEnum(Role, { message: 'Role must be one of admin, user' })
   @IsNotEmpty({ message: 'Role is required' })
   role!: Role;
