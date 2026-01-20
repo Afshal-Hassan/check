@@ -55,7 +55,8 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
     .leftJoin('dating_preferences', 'dp', 'dp.user_id = u.id')
 
     // Prompts
-    .leftJoin('prompts', 'p', 'p."user_id" = u.id')
+    .leftJoin('user_prompts', 'upm', 'upm.user_id = u.id')
+    .leftJoin('prompts', 'p', 'p.id = upm.prompt_id')
 
     /* ===================== FILTERS ===================== */
 
@@ -118,15 +119,15 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
       /* ---------- PROMPTS ---------- */
       `
       COALESCE(
-        json_agg(
-          DISTINCT jsonb_build_object(
-            'id', p.id,
-            'question', p.question,
-            'answer', p.answer
-          )
-        ) FILTER (WHERE p.id IS NOT NULL),
-        '[]'
-      ) AS "prompts"
+  json_agg(
+    DISTINCT jsonb_build_object(
+      'id', p.id,
+      'question', p.question,
+      'answer', upm.answer
+    )
+  ) FILTER (WHERE p.id IS NOT NULL),
+  '[]'
+) AS "prompts"
       `,
     ])
 
