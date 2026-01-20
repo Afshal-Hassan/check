@@ -32,7 +32,6 @@ export class PromptDTO {
 
   @IsDefined({ message: 'prompts are required' })
   @IsArray({ message: 'Prompts must be an array' })
-  @ArrayNotEmpty({ message: 'At least one interest is required' })
   @ArrayMinSize(1, { message: 'At least one prompt is required' })
   @ValidateNested({ each: true })
   @Type(() => PromptItemDTO)
