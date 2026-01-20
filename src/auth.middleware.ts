@@ -136,6 +136,9 @@ export const authorize = (req: AuthRequest, res: Response, next: NextFunction) =
 
   const { role } = req.user;
 
+  console.log(req.path);
+  console.log(isAdminRoute(req.path));
+
   if (isAdminRoute(req.path)) {
     if (role !== 'admin') {
       return res.status(403).json({
