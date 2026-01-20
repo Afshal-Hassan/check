@@ -1,3 +1,4 @@
+import { UnauthorizedException } from '@/exceptions';
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 
 interface User {
@@ -36,6 +37,6 @@ export const verifyToken = (token: string): TokenPayload => {
     const decoded = jwt.verify(token, secret) as JwtPayload;
     return decoded as TokenPayload;
   } catch (error) {
-    throw new Error('Invalid or expired token');
+    throw new UnauthorizedException('Invalid or expired token');
   }
 };

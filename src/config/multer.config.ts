@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import multerS3 from 'multer-s3';
 import { s3 } from './aws-s3.config';
 import multer, { FileFilterCallback } from 'multer';
+import { BadRequestException } from '@/exceptions/bad-request.exception';
 
 export const upload = multer({
   storage: multerS3({
@@ -15,11 +16,11 @@ export const upload = multer({
     },
   }),
 
-  fileFilter: (req, file: Express.Multer.File, cb: FileFilterCallback) => {
+  fileFilter: (_, file: Express.Multer.File, cb: FileFilterCallback) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed for S3 upload'));
+      cb(new BadRequestException('Only image files are allowed for S3 upload'));
     }
   },
 

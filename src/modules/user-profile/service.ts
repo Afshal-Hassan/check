@@ -19,7 +19,7 @@ export const saveUserProfile = async (
 ): Promise<UserProfile> => {
   const bioEn = await GoogleTranslateUtil.translateText(data.bio, 'en');
   const bioFr = await GoogleTranslateUtil.translateText(data.bio, 'fr');
-  const bioSp = await GoogleTranslateUtil.translateText(data.bio, 'es');
+  const bioEs = await GoogleTranslateUtil.translateText(data.bio, 'es');
   const bioAr = await GoogleTranslateUtil.translateText(data.bio, 'ar');
 
   return save(
@@ -27,7 +27,7 @@ export const saveUserProfile = async (
       user: { id: data.userId } as DeepPartial<any>,
       bioEn,
       bioFr,
-      bioSp,
+      bioEs,
       bioAr,
       dateOfBirth: data.dateOfBirth,
       occupation: data.occupation,
@@ -43,7 +43,7 @@ export const updatePersonalDetails = async (
 ): Promise<UserProfile> => {
   const heightEn = await GoogleTranslateUtil.translateText(data.height, 'en');
   const heightFr = await GoogleTranslateUtil.translateText(data.height, 'fr');
-  const heightSp = await GoogleTranslateUtil.translateText(data.height, 'es');
+  const heightEs = await GoogleTranslateUtil.translateText(data.height, 'es');
   const heightAr = await GoogleTranslateUtil.translateText(data.height, 'ar');
 
   const queryRunner = AppDataSource.createQueryRunner();
@@ -59,7 +59,7 @@ export const updatePersonalDetails = async (
       childrenPreference: data.childrenPreference,
       heightEn,
       heightFr,
-      heightSp,
+      heightEs,
       heightAr,
     });
 

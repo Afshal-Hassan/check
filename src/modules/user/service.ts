@@ -18,6 +18,7 @@ import {
   findUsers,
   findUserAndProfilePictureById,
 } from './repo';
+import { BadRequestException, NotFoundException } from '@/exceptions';
 
 export const getUserAndProfilePictureById = async (userId: string) => {
   return findUserAndProfilePictureById(userId);
@@ -67,7 +68,7 @@ export const completeOnboarding = async (data: OnboardingDTO, languageCode: stri
     const user = await getUserAndProfileByUserId(userId);
 
     if (user?.hasProfile)
-      throw new Error(
+      throw new BadRequestException(
         MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.PROFILE_ALREADY_SAVED, languageCode),
       );
     const updatedUser = await updateUserLocation(userId, location, queryRunner.manager);
@@ -116,29 +117,29 @@ export const uploadProfilePictures = async (
   const user = await getUserAndProfilePictureById(userId);
 
   if (!user)
-    throw new Error(
+    throw new NotFoundException(
       MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
     );
   if (user.hasProfilePicture)
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.ALREADY_UPLOADED_PICTURE, languageCode),
     );
 
   if (!files)
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FILES_UPLOADED, languageCode),
     );
 
   const { profilePicture, images } = files || {};
 
   if (!profilePicture || profilePicture.length === 0) {
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.PROFILE_PICTURE_REQUIRED, languageCode),
     );
   }
 
   if (!images || images.length === 0)
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(
         USER_ERROR_MESSAGES.AT_LEAST_ONE_IMAGE_REQUIRED,
         languageCode,

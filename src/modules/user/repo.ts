@@ -104,11 +104,11 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
       /* ---------- PROFILE ---------- */
       'up.bio_en AS "bioEn"',
       'up.bio_fr AS "bioFr"',
-      'up.bio_sp AS "bioSp"',
+      'up.bio_es AS "bioEs"',
       'up.bio_ar AS "bioAr"',
       'up.height_en AS "heightEn"',
       'up.height_fr AS "heightFr"',
-      'up.height_sp AS "heightSp"',
+      'up.height_es AS "heightEs"',
       'up.height_ar AS "heightAr"',
       'up.date_of_birth AS "dateOfBirth"',
       'up.occupation AS "occupation"',
@@ -148,8 +148,14 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
   json_agg(
     DISTINCT jsonb_build_object(
       'id', p.id,
-      'question', p.question,
-      'answer', upm.answer
+      'questionEn', p.question_en,
+      'questionFr', p.question_fr,
+      'questionEs', p.question_es,
+      'questionAr', p.question_ar,
+      'answerEn', upm.answer_en,
+      'answerFr', upm.answer_fr,
+      'answerEs', upm.answer_es,
+      'answerAr', upm.answer_ar
     )
   ) FILTER (WHERE p.id IS NOT NULL),
   '[]'
@@ -210,11 +216,11 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
         : {
             bioEn: result.bioEn,
             bioFr: result.bioFr,
-            bioSp: result.bioSp,
+            bioEs: result.bioEs,
             bioAr: result.bioAr,
             heightEn: result.heightEn,
             heightFr: result.heightFr,
-            heightSp: result.heightSp,
+            heightEs: result.heightEs,
             heightAr: result.heightAr,
             dateOfBirth: result.dateOfBirth,
             occupation: result.occupation,
