@@ -4,6 +4,25 @@ import { AppDataSource } from '@/config/data-source';
 
 export const UserRepository = AppDataSource.getRepository(User);
 
+export const findUserAndProfilePictureById = async (userId: string) => {
+  const result = await AppDataSource.getRepository(User)
+    .createQueryBuilder('user')
+    .select(['user.id'])
+    .leftJoin('user_photos', 'photo', 'photo.user_id = user.id AND photo.is_primary = :isPrimary', {
+      isPrimary: true,
+    })
+    .addSelect(['photo.id'])
+    .where('user.id = :userId', { userId })
+    .getRawOne();
+
+  if (!result) return null;
+
+  return {
+    id: result.user_id,
+    hasProfilePicture: !!result.photo_id,
+  };
+};
+
 export const findUserAndProfileById = async (userId: string) => {
   const result = await AppDataSource.getRepository(User)
     .createQueryBuilder('user')
@@ -57,6 +76,9 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
     // Prompts
     .leftJoin('user_prompts', 'upm', 'upm.user_id = u.id')
     .leftJoin('prompts', 'p', 'p.id = upm.prompt_id')
+
+    // Photos
+    .leftJoin('user_photos', 'uph', 'uph.user_id = u.id')
 
     /* ===================== FILTERS ===================== */
 
@@ -129,6 +151,20 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
   '[]'
 ) AS "prompts"
       `,
+
+      /* ---------- PHOTOS ---------- */
+      `
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', uph.id,
+            's3Key', uph.s3_key,
+            'isPrimary', uph.is_primary
+          )
+        ) FILTER (WHERE uph.id IS NOT NULL),
+        '[]'
+      ) AS "photos"
+      `,
     ])
 
     /* ===================== GROUP BY ===================== */
@@ -194,6 +230,8 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
     },
 
     prompts: result.prompts.slice(0, 10),
+
+    photos: result.photos,
   };
 };
 
