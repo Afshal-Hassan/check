@@ -1,16 +1,16 @@
+import * as PromptService from './service';
 import { Request, Response } from 'express';
-import * as UserPromptService from './service';
-import * as HeaderUtil from '@/utils/header.util';
 import * as MessageUtil from '@/utils/message.util';
+import * as HeaderUtil from '@/utils/header.util';
 import { PROMPT_SUCCESS_MESSAGES } from './message';
 
-export const savePrompts = async (req: Request, res: Response) => {
+export const getPrompts = async (req: Request, res: Response) => {
   try {
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await UserPromptService.savePrompts(req.body, languageCode);
+    const result = await PromptService.getPrompts();
 
     res.status(201).json({
-      message: MessageUtil.getLocalizedMessage(PROMPT_SUCCESS_MESSAGES.SAVED, languageCode),
+      message: MessageUtil.getLocalizedMessage(PROMPT_SUCCESS_MESSAGES.FETCH_LIST, languageCode),
       result,
     });
   } catch (err: any) {

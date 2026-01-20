@@ -58,5 +58,9 @@ export const verifyOtp = async ({
 
   if (Number(storedOtp) !== otp)
     throw new Error(MessageUtil.getLocalizedMessage(OTP_ERROR_MESSAGES.INVALID, languageCode));
+};
+
+export const deleteOtpFromRedis = async (email: string, action: string): Promise<void> => {
+  const otpKey = `otp:${email}:${action}`;
   await redisClient.del(otpKey);
 };

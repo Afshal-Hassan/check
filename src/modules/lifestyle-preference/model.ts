@@ -2,7 +2,7 @@ import { User } from '@/modules/user/model';
 import { DietEnum, PoliticalEnum, SmokingEnum, WorkoutEnum } from './enums';
 import { Column, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-@Index('idx_lifestyle_user_id', ['user'])
+// @Index('idx_lifestyle_user_id', ['user'])
 @Entity('lifestyle_preferences')
 export class LifestylePreference {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })

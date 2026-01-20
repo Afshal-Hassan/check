@@ -49,6 +49,7 @@ export const completeSignUp = async (data: CompleteSignupDto, languageCode: stri
     );
 
   await OtpUtil.verifyOtp({ email, action: OtpAction.Signup, otp, languageCode });
+  await OtpUtil.deleteOtpFromRedis(email, OtpAction.Signup);
 
   const passwordHash = await PasswordUtil.hashPassword(password);
   const user = await UserService.saveUser({
@@ -202,6 +203,7 @@ export const resetPassword = async (
     );
 
   await OtpUtil.verifyOtp({ email, action: OtpAction.ForgotPassword, otp, languageCode });
+  await OtpUtil.deleteOtpFromRedis(email, OtpAction.ForgotPassword);
 
   const passwordHash = await PasswordUtil.hashPassword(newPassword);
 

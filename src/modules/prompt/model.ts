@@ -1,19 +1,14 @@
-import { User } from '@/modules/user/model';
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { UserPrompt } from '@/modules/user-prompt/model';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 @Entity('prompts')
-@Index('idx_prompts_user_id', ['user'])
 export class Prompt {
-  @PrimaryGeneratedColumn('uuid', { name: 'id' })
+  @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
-  user!: User;
-
-  @Column({ name: 'question' })
+  @Column()
   question!: string;
 
-  @Column({ name: 'answer' })
-  answer!: string;
+  @OneToMany(() => UserPrompt, (up) => up.prompt)
+  userPrompts!: UserPrompt[];
 }

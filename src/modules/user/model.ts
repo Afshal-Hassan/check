@@ -13,9 +13,9 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Index('idx_users_email', ['email'], { unique: true })
-@Index('idx_users_email_active', ['email', 'isSuspended'])
-@Index('idx_users_role_status', ['roleId', 'isVerified', 'isSuspended'])
+// @Index('idx_users_email', ['email'], { unique: true })
+// @Index('idx_users_email_active', ['email', 'isSuspended'])
+// @Index('idx_users_role_status', ['roleId', 'isVerified', 'isSuspended'])
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })

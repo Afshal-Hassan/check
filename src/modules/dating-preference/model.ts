@@ -13,7 +13,7 @@ import {
 @Check(`"min_age" BETWEEN 18 AND 100`)
 @Check(`"max_age" BETWEEN 18 AND 100`)
 @Check(`"max_age" >= "min_age"`)
-@Index('idx_dating_user_id', ['user'])
+// @Index('idx_dating_user_id', ['user'])
 @Entity('dating_preferences')
 export class DatingPreference {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })
