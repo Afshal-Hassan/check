@@ -216,7 +216,8 @@ export const findUsers = async (
       `COUNT(*) OVER() AS "total_count"` /* total count over the filtered rows */,
     ])
     .from('users', 'u')
-    .innerJoin('user_profiles', 'up', 'up."user_id" = u.id');
+    .leftJoin('user_profiles', 'up', 'up."user_id" = u.id')
+    .where('u.role_id = 2');
 
   // Conditional queries
   if (isVerified !== undefined) {

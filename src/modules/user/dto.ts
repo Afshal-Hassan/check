@@ -10,6 +10,7 @@ import {
   IsEnum,
   IsArray,
   IsDefined,
+  ArrayNotEmpty,
 } from 'class-validator';
 
 class LocationDTO {
@@ -66,6 +67,7 @@ export class OnboardingDTO {
   profile!: ProfileDTO;
 
   @IsArray({ message: 'Interests must be an array' })
+  @ArrayNotEmpty({ message: 'At least one interest is required' })
   @IsString({ each: true, message: 'Each interest must be a string' })
   @IsNotEmpty({ each: true, message: 'Each interest is required' })
   @Transform(({ value }) => value?.map((v: any) => v?.trim()?.toLowerCase()))
