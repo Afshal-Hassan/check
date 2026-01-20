@@ -50,15 +50,15 @@ export const AUTH_MIDDLEWARE_ERROR_MESSAGES = {
   },
 };
 
-const ADMIN_ROUTES = [/\/user\/all/];
+const ADMIN_ROUTES = [/(?:\/api)?\/user\/all/];
 const PUBLIC_ROUTES = [
-  /\/auth\/login/,
-  /\/auth\/signup/,
-  /\/auth\/complete-signup/,
-  /\/auth\/forgot-password/,
-  /\/auth\/reset-password/,
-  /\/otp\/verify/,
-  /\/otp\/resend/,
+  /(?:\/api)?\/auth\/login/,
+  /(?:\/api)?\/auth\/signup/,
+  /(?:\/api)?\/auth\/complete-signup/,
+  /(?:\/api)?\/auth\/forgot-password/,
+  /(?:\/api)?\/auth\/reset-password/,
+  /(?:\/api)?\/otp\/verify/,
+  /(?:\/api)?\/otp\/resend/,
 ];
 
 const isPublicRoute = (path: string): boolean => {
