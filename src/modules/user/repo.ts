@@ -139,7 +139,6 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
       /* ---------- DATING ---------- */
       'dp.min_age AS "minAge"',
       'dp.max_age AS "maxAge"',
-      'dp.max_distance_km AS "maxDistanceKm"',
       'dp.interested_in AS "interestedIn"',
       'dp.looking_for AS "lookingFor"',
 
@@ -243,7 +242,6 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
         : {
             minAge: result.minAge,
             maxAge: result.maxAge,
-            maxDistanceKm: result.maxDistanceKm,
             interestedIn: result.interestedIn,
             lookingFor: result.lookingFor,
           },
