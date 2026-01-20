@@ -16,7 +16,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
     res.status(200).json(users);
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    throw err;
   }
 };
 
@@ -33,6 +33,27 @@ export const onboarding = async (req: Request, res: Response) => {
       result,
     });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    throw err;
+  }
+};
+
+export const uploadProfilePictures = async (req: Request, res: Response) => {
+  try {
+    const languageCode = HeaderUtil.getLanguageCode(req);
+    const files = req.files as
+      | {
+          profilePicture?: Express.MulterS3.File[];
+          images?: Express.MulterS3.File[];
+        }
+      | undefined;
+
+    const result = await UserService.uploadProfilePictures(req.body.userId, files, languageCode);
+
+    res.status(200).json({
+      message: MessageUtil.getLocalizedMessage(USER_SUCCESS_MESSAGES.IMAGES_UPLOADED, languageCode),
+      result,
+    });
+  } catch (err: any) {
+    throw err;
   }
 };

@@ -4,6 +4,25 @@ import { AppDataSource } from '@/config/data-source';
 
 export const UserRepository = AppDataSource.getRepository(User);
 
+export const findUserAndProfilePictureById = async (userId: string) => {
+  const result = await AppDataSource.getRepository(User)
+    .createQueryBuilder('user')
+    .select(['user.id'])
+    .leftJoin('user_photos', 'photo', 'photo.user_id = user.id AND photo.is_primary = :isPrimary', {
+      isPrimary: true,
+    })
+    .addSelect(['photo.id'])
+    .where('user.id = :userId', { userId })
+    .getRawOne();
+
+  if (!result) return null;
+
+  return {
+    id: result.user_id,
+    hasProfilePicture: !!result.photo_id,
+  };
+};
+
 export const findUserAndProfileById = async (userId: string) => {
   const result = await AppDataSource.getRepository(User)
     .createQueryBuilder('user')
@@ -55,7 +74,11 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
     .leftJoin('dating_preferences', 'dp', 'dp.user_id = u.id')
 
     // Prompts
-    .leftJoin('prompts', 'p', 'p."user_id" = u.id')
+    .leftJoin('user_prompts', 'upm', 'upm.user_id = u.id')
+    .leftJoin('prompts', 'p', 'p.id = upm.prompt_id')
+
+    // Photos
+    .leftJoin('user_photos', 'uph', 'uph.user_id = u.id')
 
     /* ===================== FILTERS ===================== */
 
@@ -68,19 +91,24 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
     .select([
       /* ---------- USER ---------- */
       'u.id AS "userId"',
+      'u.full_name AS "fullName"',
       'u.email AS "email"',
       'u.password_hash AS "passwordHash"',
+      'u.country AS "country"',
+      'u.state AS "state"',
+      'u.city AS "city"',
+      'u.auth_type AS "authType"',
       'u.is_verified AS "isVerified"',
       'u.is_suspended AS "isSuspended"',
 
       /* ---------- PROFILE ---------- */
       'up.bio_en AS "bioEn"',
       'up.bio_fr AS "bioFr"',
-      'up.bio_sp AS "bioSp"',
+      'up.bio_es AS "bioEs"',
       'up.bio_ar AS "bioAr"',
       'up.height_en AS "heightEn"',
       'up.height_fr AS "heightFr"',
-      'up.height_sp AS "heightSp"',
+      'up.height_es AS "heightEs"',
       'up.height_ar AS "heightAr"',
       'up.date_of_birth AS "dateOfBirth"',
       'up.occupation AS "occupation"',
@@ -111,22 +139,41 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
       /* ---------- DATING ---------- */
       'dp.min_age AS "minAge"',
       'dp.max_age AS "maxAge"',
-      'dp.max_distance_km AS "maxDistanceKm"',
       'dp.interested_in AS "interestedIn"',
       'dp.looking_for AS "lookingFor"',
 
       /* ---------- PROMPTS ---------- */
       `
       COALESCE(
+  json_agg(
+    DISTINCT jsonb_build_object(
+      'id', p.id,
+      'questionEn', p.question_en,
+      'questionFr', p.question_fr,
+      'questionEs', p.question_es,
+      'questionAr', p.question_ar,
+      'answerEn', upm.answer_en,
+      'answerFr', upm.answer_fr,
+      'answerEs', upm.answer_es,
+      'answerAr', upm.answer_ar
+    )
+  ) FILTER (WHERE p.id IS NOT NULL),
+  '[]'
+) AS "prompts"
+      `,
+
+      /* ---------- PHOTOS ---------- */
+      `
+      COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
-            'id', p.id,
-            'question', p.question,
-            'answer', p.answer
+            'id', uph.id,
+            's3Key', uph.s3_key,
+            'isPrimary', uph.is_primary
           )
-        ) FILTER (WHERE p.id IS NOT NULL),
+        ) FILTER (WHERE uph.id IS NOT NULL),
         '[]'
-      ) AS "prompts"
+      ) AS "photos"
       `,
     ])
 
@@ -154,45 +201,60 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
   return {
     id: result.userId,
     email: result.email,
+    fullName: result.fullName,
     passwordHash: result.passwordHash,
+    country: result.country,
+    state: result.state,
+    city: result.city,
+    authType: result.authType,
     isVerified: result.isVerified,
     isSuspended: result.isSuspended,
 
-    profile: {
-      bioEn: result.bioEn,
-      bioFr: result.bioFr,
-      bioSp: result.bioSp,
-      bioAr: result.bioAr,
-      heightEn: result.heightEn,
-      heightFr: result.heightFr,
-      heightSp: result.heightSp,
-      heightAr: result.heightAr,
-      dateOfBirth: result.dateOfBirth,
-      occupation: result.occupation,
-      gender: result.gender,
-      bodyType: result.bodyType,
-      relationshipStatus: result.relationshipStatus,
-      childrenPreference: result.childrenPreference,
-    },
+    profile:
+      result.bioEn === null
+        ? null
+        : {
+            bioEn: result.bioEn,
+            bioFr: result.bioFr,
+            bioEs: result.bioEs,
+            bioAr: result.bioAr,
+            heightEn: result.heightEn,
+            heightFr: result.heightFr,
+            heightEs: result.heightEs,
+            heightAr: result.heightAr,
+            dateOfBirth: result.dateOfBirth,
+            occupation: result.occupation,
+            gender: result.gender,
+            bodyType: result.bodyType,
+            relationshipStatus: result.relationshipStatus,
+            childrenPreference: result.childrenPreference,
+          },
 
-    interests: result.interests,
+    interests: result.interests.length === 0 ? null : result.interests,
 
-    lifestylePreference: {
-      smoking: result.smoking,
-      politicalViews: result.politicalViews,
-      diet: result.diet,
-      workoutRoutine: result.workoutRoutine,
-    },
+    lifestylePreference:
+      result.smoking === null
+        ? null
+        : {
+            smoking: result.smoking,
+            politicalViews: result.politicalViews,
+            diet: result.diet,
+            workoutRoutine: result.workoutRoutine,
+          },
 
-    datingPreference: {
-      minAge: result.minAge,
-      maxAge: result.maxAge,
-      maxDistanceKm: result.maxDistanceKm,
-      interestedIn: result.interestedIn,
-      lookingFor: result.lookingFor,
-    },
+    datingPreference:
+      result.minAge === null
+        ? null
+        : {
+            minAge: result.minAge,
+            maxAge: result.maxAge,
+            interestedIn: result.interestedIn,
+            lookingFor: result.lookingFor,
+          },
 
-    prompts: result.prompts.slice(0, 10),
+    prompts: result.prompts.length === 0 ? null : result.prompts,
+
+    photos: result.photos.length === 0 ? null : result.photos,
   };
 };
 

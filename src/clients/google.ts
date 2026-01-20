@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { BadRequestException } from '@/exceptions/bad-request.exception';
 
 export const verifyToken = async (accessToken: string) => {
   try {
@@ -12,6 +13,6 @@ export const verifyToken = async (accessToken: string) => {
 
     return response;
   } catch (error) {
-    throw new Error('Unable to verify from google');
+    throw new BadRequestException('Unable to verify from google');
   }
 };

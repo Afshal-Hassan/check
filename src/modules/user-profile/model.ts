@@ -19,8 +19,8 @@ export class UserProfile {
   @Column({ name: 'bio_fr', type: 'text' })
   bioFr!: string;
 
-  @Column({ name: 'bio_sp', type: 'text' })
-  bioSp!: string;
+  @Column({ name: 'bio_es', type: 'text' })
+  bioEs!: string;
 
   @Column({ name: 'bio_ar', type: 'text' })
   bioAr!: string;
@@ -31,8 +31,8 @@ export class UserProfile {
   @Column({ name: 'height_fr', type: 'varchar', length: 32, nullable: true })
   heightFr!: string;
 
-  @Column({ name: 'height_sp', type: 'varchar', length: 32, nullable: true })
-  heightSp!: string;
+  @Column({ name: 'height_es', type: 'varchar', length: 32, nullable: true })
+  heightEs!: string;
 
   @Column({ name: 'height_ar', type: 'varchar', length: 32, nullable: true })
   heightAr!: string;

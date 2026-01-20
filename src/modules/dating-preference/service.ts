@@ -4,6 +4,7 @@ import { DatingPreferenceDTO } from './dto';
 import * as MessageUtil from '@/utils/message.util';
 import { findDatingPreferenceByUserId, save } from './repo';
 import { DATING_PREFERENCE_ERROR_MESSAGES } from './message';
+import { BadRequestException } from '@/exceptions';
 
 export const getDatingPreferenceByUserId = async (
   userId: string,
@@ -18,7 +19,7 @@ export const saveDatingPreference = async (
   const datingPreference = await getDatingPreferenceByUserId(data.userId);
 
   if (datingPreference)
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(DATING_PREFERENCE_ERROR_MESSAGES.ALREADY_SAVED, languageCode),
     );
 
@@ -26,7 +27,6 @@ export const saveDatingPreference = async (
     user: { id: data.userId } as DeepPartial<any>,
     minAge: data.minAge,
     maxAge: data.maxAge,
-    maxDistanceKm: data.maxDistanceKm,
     interestedIn: data.interestedIn,
     lookingFor: data.lookingFor,
   });

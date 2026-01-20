@@ -8,6 +8,7 @@ import * as MessageUtil from '@/utils/message.util';
 import * as PasswordUtil from '@/utils/password.util';
 import * as UserService from '@/modules/user/service';
 import { AuthType, Role, SocialProvider } from './enums';
+import { BadRequestException, NotFoundException } from '@/exceptions';
 import { SignupDto, ForgotPasswordDto, ResetPasswordDto, LoginDto, CompleteSignupDto } from './dto';
 import {
   FORGOT_PASSWORD_ERROR_MESSAGES,
@@ -22,7 +23,7 @@ export const signup = async (data: SignupDto, languageCode: string) => {
   const existingUser = await UserService.getUserByEmail(email);
 
   if (existingUser)
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(SIGNUP_ERROR_MESSAGES.EMAIL_ALREADY_REGISTERED, languageCode),
     );
 
@@ -44,7 +45,7 @@ export const completeSignUp = async (data: CompleteSignupDto, languageCode: stri
   const existingUser = await UserService.getUserByEmail(email);
 
   if (existingUser)
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(SIGNUP_ERROR_MESSAGES.EMAIL_ALREADY_REGISTERED, languageCode),
     );
 
@@ -62,7 +63,7 @@ export const completeSignUp = async (data: CompleteSignupDto, languageCode: stri
 
   const token = JwtUtil.generateToken(user, Role.User);
 
-  return { ...user, token, passwordHash: undefined };
+  return { user: { ...user, passwordHash: undefined }, token };
 };
 
 export const login = async (data: LoginDto, languageCode: string) => {
@@ -90,7 +91,7 @@ const loginWithEmail = async (
   const userDetails = await UserService.getActiveUserByEmailAndRole(email, role);
 
   if (!userDetails) {
-    throw new Error(
+    throw new NotFoundException(
       MessageUtil.getLocalizedMessage(LOGIN_ERROR_MESSAGES.INVALID_EMAIL, languageCode),
     );
   }
@@ -98,14 +99,14 @@ const loginWithEmail = async (
   const isPasswordValid = await PasswordUtil.comparePassword(password, userDetails.passwordHash);
 
   if (!isPasswordValid) {
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(LOGIN_ERROR_MESSAGES.INVALID_CREDENTIALS, languageCode),
     );
   }
 
   const token = JwtUtil.generateToken({ id: userDetails.id, email: userDetails.email }, role);
 
-  return { ...userDetails, passwordHash: undefined, token };
+  return { user: { ...userDetails, passwordHash: undefined }, token };
 };
 
 const loginWithSocial = async (
@@ -118,7 +119,7 @@ const loginWithSocial = async (
     case SocialProvider.Apple:
       throw new Error('Apple login not implemented');
     default:
-      throw new Error('Unsupported provider');
+      throw new BadRequestException('Unsupported provider');
   }
 };
 
@@ -130,7 +131,7 @@ const continueWithGoogle = async (
   const response = await GoogleClient.verifyToken(accessToken);
 
   if (response.status === 400) {
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(LOGIN_ERROR_MESSAGES.INVALID_CREDENTIALS, languageCode),
     );
   }
@@ -138,7 +139,7 @@ const continueWithGoogle = async (
   const userDetails = await UserService.getActiveUserByEmailAndRole(response.data.email, Role.User);
 
   if (userDetails && userDetails.isSuspended) {
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(LOGIN_ERROR_MESSAGES.ACCOUNT_SUSPENDED, languageCode),
     );
   }
@@ -154,7 +155,7 @@ const continueWithGoogle = async (
 
   const token = JwtUtil.generateToken({ id: user.id, email: user.email }, Role.User);
 
-  return { ...user, passwordHash: undefined, token };
+  return { user: { ...user, passwordHash: undefined }, token };
 };
 
 export const forgotPassword = async (data: ForgotPasswordDto, languageCode: string) => {
@@ -163,7 +164,7 @@ export const forgotPassword = async (data: ForgotPasswordDto, languageCode: stri
   const user = await UserService.getActiveUserByEmail(email);
 
   if (!user)
-    throw new Error(
+    throw new NotFoundException(
       MessageUtil.getLocalizedMessage(FORGOT_PASSWORD_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
     );
 
@@ -188,14 +189,14 @@ export const resetPassword = async (
   const user = await UserService.getActiveUserByEmail(email);
 
   if (!user)
-    throw new Error(
+    throw new NotFoundException(
       MessageUtil.getLocalizedMessage(RESET_PASSWORD_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
     );
 
   const isSameAsOld = await PasswordUtil.comparePassword(newPassword, user.passwordHash);
 
   if (isSameAsOld)
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(
         RESET_PASSWORD_ERROR_MESSAGES.NEW_PASSWORD_SAME_AS_OLD,
         languageCode,

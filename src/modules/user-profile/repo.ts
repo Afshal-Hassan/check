@@ -23,7 +23,7 @@ export const updatePersonalDetailsByUserId = async (
 
   if (data.heightEn !== undefined) updateData.heightEn = data.heightEn;
   if (data.heightFr !== undefined) updateData.heightFr = data.heightFr;
-  if (data.heightSp !== undefined) updateData.heightSp = data.heightSp;
+  if (data.heightEs !== undefined) updateData.heightEs = data.heightEs;
   if (data.heightAr !== undefined) updateData.heightAr = data.heightAr;
 
   if (data.bodyType !== undefined) updateData.bodyType = data.bodyType;

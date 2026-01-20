@@ -13,7 +13,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
       message: MessageUtil.getLocalizedMessage(OTP_SUCCESS_MESSAGES.VERIFIED, languageCode),
     });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    throw err;
   }
 };
 
@@ -27,6 +27,6 @@ export const resendOtp = async (req: Request, res: Response) => {
       ...result,
     });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    throw err;
   }
 };

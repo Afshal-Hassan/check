@@ -14,7 +14,7 @@ export const signup = async (req: Request, res: Response) => {
       ...result,
     });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    throw err;
   }
 };
 
@@ -31,7 +31,7 @@ export const completeSignup = async (req: Request, res: Response) => {
       ...result,
     });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    throw err;
   }
 };
 
@@ -45,7 +45,8 @@ export const login = async (req: Request, res: Response) => {
       ...result,
     });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    console.log(err);
+    throw err;
   }
 };
 
@@ -62,7 +63,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
       ...result,
     });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    throw err;
   }
 };
 
@@ -78,6 +79,6 @@ export const resetPassword = async (req: Request, res: Response) => {
       ),
     });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    throw err;
   }
 };

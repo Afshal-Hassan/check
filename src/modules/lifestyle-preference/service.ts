@@ -4,6 +4,7 @@ import { LifestylePreferenceDTO } from './dto';
 import * as MessageUtil from '@/utils/message.util';
 import { findLifestylePreferenceByUserId, save } from './repo';
 import { LIFESTYLE_PREFERENCE_ERROR_MESSAGES } from './message';
+import { BadRequestException } from '@/exceptions';
 
 export const getLifestylePreferenceByUserId = async (
   userId: string,
@@ -18,7 +19,7 @@ export const saveLifestylePreference = async (
   const lifestylePreference = await findLifestylePreferenceByUserId(data.userId);
 
   if (lifestylePreference)
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(
         LIFESTYLE_PREFERENCE_ERROR_MESSAGES.ALREADY_SAVED,
         languageCode,
