@@ -1,10 +1,11 @@
 import { User } from './model';
 import { OnboardingDTO } from './dto';
-import { EntityManager } from 'typeorm';
+import { DeepPartial, EntityManager } from 'typeorm';
 import { USER_ERROR_MESSAGES } from './message';
 import * as MessageUtil from '@/utils/message.util';
 import { AppDataSource } from '@/config/data-source';
 import * as InterestService from '@/modules/interest/service';
+import * as UserPhotoService from '@/modules/user-photo/service';
 import * as UserProfileService from '@/modules/user-profile/service';
 import {
   save,
@@ -15,7 +16,12 @@ import {
   findActiveUserByEmailAndRole,
   findUserAndProfileById,
   findUsers,
+  findUserAndProfilePictureById,
 } from './repo';
+
+export const getUserAndProfilePictureById = async (userId: string) => {
+  return findUserAndProfilePictureById(userId);
+};
 
 export const getUserAndProfileByUserId = async (userId: string) => {
   return findUserAndProfileById(userId);
@@ -95,4 +101,69 @@ const updateUserLocation = async (userId: string, user: Partial<User>, manager: 
   const { country, city, state } = user;
 
   return updateLocationById(userId, { country, city, state }, manager);
+};
+
+export const uploadProfilePictures = async (
+  userId: string,
+  files:
+    | {
+        profilePicture?: Express.MulterS3.File[];
+        images?: Express.MulterS3.File[];
+      }
+    | undefined,
+  languageCode: string,
+) => {
+  const user = await getUserAndProfilePictureById(userId);
+
+  if (!user)
+    throw new Error(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
+    );
+  if (user.hasProfilePicture)
+    throw new Error(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.ALREADY_UPLOADED_PICTURE, languageCode),
+    );
+
+  if (!files)
+    throw new Error(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FILES_UPLOADED, languageCode),
+    );
+
+  const { profilePicture, images } = files || {};
+
+  if (!profilePicture || profilePicture.length === 0) {
+    throw new Error(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.PROFILE_PICTURE_REQUIRED, languageCode),
+    );
+  }
+
+  if (!images || images.length === 0)
+    throw new Error(
+      MessageUtil.getLocalizedMessage(
+        USER_ERROR_MESSAGES.AT_LEAST_ONE_IMAGE_REQUIRED,
+        languageCode,
+      ),
+    );
+
+  const photos: {
+    user: User;
+    s3Key: string;
+    isPrimary: boolean;
+  }[] = [];
+
+  photos.push({
+    user: { id: userId } as DeepPartial<any>,
+    s3Key: profilePicture?.[0].key,
+    isPrimary: true,
+  });
+
+  images.forEach((image) => {
+    photos.push({
+      user: { id: userId } as DeepPartial<any>,
+      s3Key: image.key,
+      isPrimary: false,
+    });
+  });
+
+  return UserPhotoService.savePhotos(photos);
 };
