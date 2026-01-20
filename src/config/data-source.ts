@@ -12,6 +12,7 @@ import { UserPhoto } from '@/modules/user-photo/model';
 import { UserProfile } from '@/modules/user-profile/model';
 import { DatingPreference } from '@/modules/dating-preference/model';
 import { LifestylePreference } from '@/modules/lifestyle-preference/model';
+import { UserPrompt } from '@/modules/user-prompt/model';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -29,6 +30,7 @@ export const AppDataSource = new DataSource({
     UserPhoto,
     UserProfile,
     Prompt,
+    UserPrompt,
     Interest,
     LifestylePreference,
     DatingPreference,
