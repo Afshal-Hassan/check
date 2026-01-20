@@ -57,6 +57,8 @@ const PUBLIC_ROUTES = [
   '/auth/complete-signup',
   '/auth/forgot-password',
   '/auth/reset-password',
+  '/otp/verify',
+  '/otp/resend',
 ];
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
