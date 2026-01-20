@@ -62,7 +62,7 @@ export const completeSignUp = async (data: CompleteSignupDto, languageCode: stri
 
   const token = JwtUtil.generateToken(user, Role.User);
 
-  return { ...user, token, passwordHash: undefined };
+  return { user: { ...user, passwordHash: undefined }, token };
 };
 
 export const login = async (data: LoginDto, languageCode: string) => {
@@ -105,7 +105,7 @@ const loginWithEmail = async (
 
   const token = JwtUtil.generateToken({ id: userDetails.id, email: userDetails.email }, role);
 
-  return { ...userDetails, passwordHash: undefined, token };
+  return { user: { ...userDetails, passwordHash: undefined }, token };
 };
 
 const loginWithSocial = async (
@@ -154,7 +154,7 @@ const continueWithGoogle = async (
 
   const token = JwtUtil.generateToken({ id: user.id, email: user.email }, Role.User);
 
-  return { ...user, passwordHash: undefined, token };
+  return { user: { ...user, passwordHash: undefined }, token };
 };
 
 export const forgotPassword = async (data: ForgotPasswordDto, languageCode: string) => {

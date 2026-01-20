@@ -94,6 +94,10 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
       'u.full_name AS "fullName"',
       'u.email AS "email"',
       'u.password_hash AS "passwordHash"',
+      'u.country AS "country"',
+      'u.state AS "state"',
+      'u.city AS "city"',
+      'u.auth_type AS "authType"',
       'u.is_verified AS "isVerified"',
       'u.is_suspended AS "isSuspended"',
 
@@ -194,6 +198,10 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
     email: result.email,
     fullName: result.fullName,
     passwordHash: result.passwordHash,
+    country: result.country,
+    state: result.state,
+    city: result.city,
+    authType: result.authType,
     isVerified: result.isVerified,
     isSuspended: result.isSuspended,
 
