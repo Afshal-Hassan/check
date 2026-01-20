@@ -50,19 +50,27 @@ export const AUTH_MIDDLEWARE_ERROR_MESSAGES = {
   },
 };
 
-const ADMIN_ROUTES = ['/users/all'];
+const ADMIN_ROUTES = [/\/user\/all/];
 const PUBLIC_ROUTES = [
-  '/auth/login',
-  '/auth/signup',
-  '/auth/complete-signup',
-  '/auth/forgot-password',
-  '/auth/reset-password',
-  '/otp/verify',
-  '/otp/resend',
+  /\/auth\/login/,
+  /\/auth\/signup/,
+  /\/auth\/complete-signup/,
+  /\/auth\/forgot-password/,
+  /\/auth\/reset-password/,
+  /\/otp\/verify/,
+  /\/otp\/resend/,
 ];
 
+const isPublicRoute = (path: string): boolean => {
+  return PUBLIC_ROUTES.some((pattern) => pattern.test(path));
+};
+
+const isAdminRoute = (path: string): boolean => {
+  return ADMIN_ROUTES.some((pattern) => pattern.test(path));
+};
+
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (PUBLIC_ROUTES.some((route) => req.path.includes(route))) {
+  if (isPublicRoute(req.path)) {
     return next();
   }
 
@@ -111,7 +119,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
 };
 
 export const authorize = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (PUBLIC_ROUTES.some((route) => req.path.includes(route))) {
+  if (isPublicRoute(req.path)) {
     return next();
   }
 
@@ -128,7 +136,7 @@ export const authorize = (req: AuthRequest, res: Response, next: NextFunction) =
 
   const { role } = req.user;
 
-  if (ADMIN_ROUTES.some((route) => req.path.includes(route))) {
+  if (isAdminRoute(req.path)) {
     if (role !== 'admin') {
       return res.status(403).json({
         message: MessageUtil.getLocalizedMessage(

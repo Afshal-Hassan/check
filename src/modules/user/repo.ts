@@ -212,18 +212,18 @@ export const findUsers = async (
       'u.email AS "email"',
       'up.gender AS "gender"',
       'up.occupation AS "occupation"',
-      `DATE_PART('year', AGE(up."dateOfBirth")) AS "age"`,
+      `DATE_PART('year', AGE(up."date_of_birth")) AS "age"`,
       `COUNT(*) OVER() AS "total_count"` /* total count over the filtered rows */,
     ])
     .from('users', 'u')
-    .innerJoin('user_profiles', 'up', 'up."userId" = u.id');
+    .innerJoin('user_profiles', 'up', 'up."user_id" = u.id');
 
   // Conditional queries
   if (isVerified !== undefined) {
-    queryBuilder.andWhere('u."isVerified" = :isVerified', { isVerified });
+    queryBuilder.andWhere('u."is_verified" = :isVerified', { isVerified });
   }
   if (isSuspended !== undefined) {
-    queryBuilder.andWhere('u."isSuspended" = :isSuspended', { isSuspended });
+    queryBuilder.andWhere('u."is_suspended" = :isSuspended', { isSuspended });
   }
 
   /* Pagination */
