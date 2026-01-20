@@ -16,10 +16,6 @@ export class DatingPreferenceDTO {
   @Max(80, { message: 'Maximum age cannot exceed 80' })
   maxAge!: number;
 
-  @IsInt({ message: 'Maximum distance must be an integer' })
-  @Min(1, { message: 'Maximum distance must be at least 1 km' })
-  maxDistanceKm!: number;
-
   @IsEnum(InterestedInEnum, {
     message: `InterestedIn must be one of: ${Object.values(InterestedInEnum).join(', ')}`,
   })

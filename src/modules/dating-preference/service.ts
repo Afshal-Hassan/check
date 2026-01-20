@@ -26,7 +26,6 @@ export const saveDatingPreference = async (
     user: { id: data.userId } as DeepPartial<any>,
     minAge: data.minAge,
     maxAge: data.maxAge,
-    maxDistanceKm: data.maxDistanceKm,
     interestedIn: data.interestedIn,
     lookingFor: data.lookingFor,
   });

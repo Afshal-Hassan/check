@@ -29,9 +29,6 @@ export class DatingPreference {
   @Column({ name: 'max_age' })
   maxAge!: number;
 
-  @Column({ name: 'max_distance_km' })
-  maxDistanceKm!: number;
-
   @Column({ name: 'interested_in', type: 'varchar', length: 32 })
   interestedIn!: InterestedInEnum;
 
