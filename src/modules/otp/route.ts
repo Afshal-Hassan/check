@@ -1,6 +1,8 @@
 import { Request, Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { resendOtp, verifyOtp } from './controller';
+import { validateDTO } from '@/middleware';
+import { VerifyOtpDto } from './dto';
 
 const resendOtpLimiter = rateLimit({
   windowMs: 60 * 1000 /* ***** 1 minute ***** */,
@@ -16,7 +18,7 @@ const resendOtpLimiter = rateLimit({
 
 const router = Router();
 
-router.post('/verify', verifyOtp);
+router.post('/verify', validateDTO(VerifyOtpDto), verifyOtp);
 router.post('/resend', resendOtpLimiter, resendOtp);
 
 export default router;
