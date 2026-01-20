@@ -1,4 +1,3 @@
-import { AppDataSource } from '@/config/data-source';
 import { EntityManager } from 'typeorm';
 
 export const save = async (

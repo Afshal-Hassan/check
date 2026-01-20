@@ -1,10 +1,8 @@
 import { Router } from 'express';
-import { PromptDTO } from './dto';
-import { validateDTO } from '@/middleware';
-import { savePrompts } from './controller';
+import { getPrompts } from './controller';
 
 const router = Router();
 
-router.post('/', validateDTO(PromptDTO), savePrompts);
+router.get('/all', getPrompts);
 
 export default router;

@@ -1,21 +1,23 @@
-import { Type, Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsDefined,
   IsNotEmpty,
   IsString,
   IsUUID,
-  ValidateNested,
   MaxLength,
-  IsDefined,
+  ValidateNested,
 } from 'class-validator';
 
-export class PromptItemDTO {
-  @Transform(({ value }) => value?.trim())
-  @IsString({ message: 'Question must be a string' })
-  @IsNotEmpty({ message: 'Question is required' })
-  @MaxLength(500, { message: 'Question must be at most 500 characters' })
-  question!: string;
+class PromptItemDTO {
+  @IsUUID('4', { message: 'User ID must be a valid UUID' })
+  @IsNotEmpty({ message: 'User ID is required' })
+  userId!: string;
+
+  @IsUUID('4', { message: 'User ID must be a valid UUID' })
+  @IsNotEmpty({ message: 'User ID is required' })
+  promptId!: string;
 
   @Transform(({ value }) => value?.trim())
   @IsString({ message: 'Answer must be a string' })
@@ -24,12 +26,8 @@ export class PromptItemDTO {
   answer!: string;
 }
 
-export class PromptDTO {
-  @IsUUID('4', { message: 'User ID must be a valid UUID' })
-  @IsNotEmpty({ message: 'User ID is required' })
-  userId!: string;
-
-  @IsDefined({ message: 'prompts are required' })
+export class SavePromptDTO {
+  @IsDefined({ message: 'Prompts are required' })
   @IsArray({ message: 'Prompts must be an array' })
   @ArrayMinSize(1, { message: 'At least one prompt is required' })
   @ValidateNested({ each: true })

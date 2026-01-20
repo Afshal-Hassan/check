@@ -1,9 +1,10 @@
 import { GenderEnum } from '@/constants';
 import { User } from '@/modules/user/model';
 import { BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('user_profiles')
+// @Index('idx_user_profiles_user_id', ['user'], { unique: true })
 export class UserProfile {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })
   id!: string;
