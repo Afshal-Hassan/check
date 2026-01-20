@@ -70,7 +70,7 @@ const isAdminRoute = (path: string): boolean => {
 };
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (isPublicRoute(req.path)) {
+  if (isPublicRoute(req.originalUrl)) {
     return next();
   }
 
@@ -119,7 +119,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
 };
 
 export const authorize = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (isPublicRoute(req.path)) {
+  if (isPublicRoute(req.originalUrl)) {
     return next();
   }
 
@@ -135,9 +135,6 @@ export const authorize = (req: AuthRequest, res: Response, next: NextFunction) =
   }
 
   const { role } = req.user;
-
-  console.log(req.path);
-  console.log(isAdminRoute(req.path));
 
   if (isAdminRoute(req.path)) {
     if (role !== 'admin') {
