@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { validate, ValidationError } from 'class-validator';
 
 export const globalErrorHandler = (err: any, _: Request, res: Response, __: NextFunction) => {
-  const statusCode = err.statusCode || err.status || 500;
-  const message = err.message || 'Internal Server Error';
+  const statusCode = err.statusCode || err.status || 400;
+  const message = err.message || 'Something went wrong';
 
   const errorResponse = {
     success: false,

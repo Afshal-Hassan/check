@@ -1,6 +1,7 @@
 import { OtpAction } from '@/constants';
 import redisClient from '@/config/redis.config';
 import * as MessageUtil from '@/utils/message.util';
+import { BadRequestException } from '@/exceptions';
 
 interface StoreOtpParams {
   email: string;
@@ -52,12 +53,14 @@ export const verifyOtp = async ({
   const storedOtp = await redisClient.get(otpKey);
 
   if (!storedOtp)
-    throw new Error(
+    throw new BadRequestException(
       MessageUtil.getLocalizedMessage(OTP_ERROR_MESSAGES.EXPIRED_OR_NOT_EXIST, languageCode),
     );
 
   if (Number(storedOtp) !== otp)
-    throw new Error(MessageUtil.getLocalizedMessage(OTP_ERROR_MESSAGES.INVALID, languageCode));
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(OTP_ERROR_MESSAGES.INVALID, languageCode),
+    );
 };
 
 export const deleteOtpFromRedis = async (email: string, action: string): Promise<void> => {

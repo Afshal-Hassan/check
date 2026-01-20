@@ -1,6 +1,6 @@
 import { Prompt } from './model';
 import { findAllPrompts } from './repo';
 
-export const getPrompts = async (): Promise<Prompt[] | null> => {
-  return findAllPrompts();
+export const getPrompts = async (languageCode: string): Promise<Prompt[] | null> => {
+  return findAllPrompts(languageCode);
 };
