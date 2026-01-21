@@ -114,13 +114,6 @@ export const uploadProfilePictures = async (
     | undefined,
   languageCode: string,
 ) => {
-  const user = await getUserAndProfilePictureById(userId);
-
-  if (!user)
-    throw new NotFoundException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
-    );
-
   if (!files)
     throw new BadRequestException(
       MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FILES_UPLOADED, languageCode),
@@ -141,8 +134,6 @@ export const uploadProfilePictures = async (
         languageCode,
       ),
     );
-
-  if (user.hasProfilePicture) await S3Util.deleteFolder(`users/${userId}/`);
 
   const photos: {
     user: User;

@@ -8,12 +8,6 @@ export const USER_PROMPTS_SUCCESS_MESSAGES = {
 };
 
 export const USER_PROMPTS_ERROR_MESSAGES = {
-  ALREADY_SAVED: {
-    en: 'These user prompts are already saved.',
-    fr: 'Ces invites utilisateur sont déjà enregistrées.',
-    es: 'Estas indicaciones del usuario ya están guardadas.',
-    ar: 'تم حفظ هذه المطالبات بالفعل',
-  },
   DUPLICATE_PROMPT_IDS: {
     en: 'Duplicate prompts are not allowed.',
     fr: 'Les invites en double ne sont pas autorisées.',

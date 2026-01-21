@@ -6,12 +6,3 @@ export const DATING_PREFERENCE_SUCCESS_MESSAGES = {
     ar: 'تم حفظ تفضيلات المواعدة بنجاح.',
   },
 };
-
-export const DATING_PREFERENCE_ERROR_MESSAGES = {
-  ALREADY_SAVED: {
-    en: 'Dating preference already saved',
-    fr: 'Préférence de rencontre déjà enregistrée',
-    es: 'Preferencia de citas ya guardada',
-    ar: 'تم حفظ تفضيلات المواعدة بالفعل',
-  },
-};

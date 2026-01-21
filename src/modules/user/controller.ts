@@ -64,7 +64,11 @@ export const uploadProfilePictures = async (req: Request, res: Response) => {
         }
       | undefined;
 
-    const result = await UserService.uploadProfilePictures(req.body.userId, files, languageCode);
+    const result = await UserService.uploadProfilePictures(
+      req.params.userId as string,
+      files,
+      languageCode,
+    );
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(USER_SUCCESS_MESSAGES.IMAGES_UPLOADED, languageCode),
