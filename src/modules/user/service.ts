@@ -85,11 +85,29 @@ export const getUserDetailsByEmail = async (email: string) => {
 };
 
 export const getUserAndProfilePictureById = async (userId: string) => {
-  return findUserAndProfilePictureById(userId);
+  const result = await findUserAndProfilePictureById(userId);
+
+  return {
+    id: result.user_id,
+    hasProfilePicture: !!result.photo_id,
+    photo: result.photo_id
+      ? {
+          id: result.photo_id,
+          userId: result.photo_user_id,
+          s3Key: result.photo_s3_key,
+          isPrimary: result.photo_is_primary,
+        }
+      : null,
+  };
 };
 
 export const getUserAndProfileByUserId = async (userId: string) => {
-  return findUserAndProfileById(userId);
+  const result = await findUserAndProfileById(userId);
+
+  return {
+    id: result.user_id,
+    hasProfile: !!result.profile_id,
+  };
 };
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
@@ -163,13 +181,20 @@ export const getActiveUserByEmailAndRole = async (email: string, role: string) =
   };
 };
 
-export const getUsers = async (
-  page: number,
-  isVerified: boolean,
-  isSuspended: boolean,
-): Promise<User[]> => {
-  const { data } = await findUsers(page, isVerified, isSuspended);
-  return data;
+export const getUsers = async (page: number, isVerified: boolean, isSuspended: boolean) => {
+  const result = await findUsers(page, isVerified, isSuspended);
+
+  const total = result.length > 0 ? Number(result[0].total_count) : 0;
+
+  const data = result.map((r) => ({
+    userId: r.userId,
+    email: r.email,
+    gender: r.gender,
+    occupation: r.occupation,
+    age: Number(r.age),
+  }));
+
+  return { data, total };
 };
 
 export const saveUser = async (userData: Partial<User>): Promise<User> => {
