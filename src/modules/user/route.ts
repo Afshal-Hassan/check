@@ -12,7 +12,7 @@ router.get('/details/:email', getUserDetailsByEmail);
 router.post('/onboarding', validateDTO(OnboardingDTO), onboarding);
 
 /* Images Upload */
-router.post(
+router.put(
   '/pictures/upload/:userId',
   deleteOldFilesFromS3,
   upload.fields([
