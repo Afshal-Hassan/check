@@ -10,7 +10,7 @@ export const upload = multer({
     contentType: multerS3.AUTO_CONTENT_TYPE,
     bucket: process.env.AWS_S3_BUCKET_NAME as string,
     key: (req: any, _: any, cb: any) => {
-      const userId = req.body.userId;
+      const userId = req.params.userId;
       const key = `users/${userId}/images/${crypto.randomUUID()}`;
       cb(null, key);
     },

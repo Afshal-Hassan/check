@@ -1,10 +1,10 @@
 import { UserPrompt } from './model';
 import { DeepPartial } from 'typeorm';
 import { SavePromptDTO } from './dto';
+import { saveUserPromptList } from './repo';
 import { BadRequestException } from '@/exceptions';
 import * as MessageUtil from '@/utils/message.util';
 import { USER_PROMPTS_ERROR_MESSAGES } from './message';
-import { saveUserPromptList } from './repo';
 import * as GoogleTranslateUtil from '@/utils/google-translate.util';
 
 export const saveUserPrompts = async (

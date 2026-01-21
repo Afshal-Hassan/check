@@ -20,12 +20,6 @@ export const USER_SUCCESS_MESSAGES = {
 };
 
 export const USER_ERROR_MESSAGES = {
-  PROFILE_ALREADY_SAVED: {
-    en: 'Profile already saved',
-    fr: 'Profil déjà enregistré',
-    es: 'Perfil ya guardado',
-    ar: 'تم حفظ الملف الشخصي بالفعل',
-  },
   USER_NOT_FOUND: {
     en: 'User not found',
     fr: 'Utilisateur non trouvé',
