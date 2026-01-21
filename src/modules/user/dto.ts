@@ -11,6 +11,7 @@ import {
   IsArray,
   IsDefined,
   ArrayNotEmpty,
+  MinLength,
 } from 'class-validator';
 
 class LocationDTO {
@@ -30,7 +31,8 @@ class ProfileDTO {
   @Transform(({ value }) => value?.trim())
   @IsString({ message: 'Bio must be a string' })
   @IsNotEmpty({ message: 'Bio is required' })
-  @MaxLength(200, { message: 'Bio must be at most 200 characters' })
+  @MinLength(20, { message: 'Bio must be atleast 20 characters' })
+  @MaxLength(500, { message: 'Bio must be at most 500 characters' })
   bio!: string;
 
   @IsDateString({}, { message: 'Date of Birth must be a valid date string' })

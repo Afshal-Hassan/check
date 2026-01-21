@@ -17,18 +17,7 @@ export const findUserAndProfilePictureById = async (userId: string) => {
 
   if (!result) return null;
 
-  return {
-    id: result.user_id,
-    hasProfilePicture: !!result.photo_id,
-    photo: result.photo_id
-      ? {
-          id: result.photo_id,
-          userId: result.photo_user_id,
-          s3Key: result.photo_s3_key,
-          isPrimary: result.photo_is_primary,
-        }
-      : null,
-  };
+  return result;
 };
 
 export const findUserAndProfileById = async (userId: string) => {
@@ -42,10 +31,7 @@ export const findUserAndProfileById = async (userId: string) => {
 
   if (!result) return null;
 
-  return {
-    id: result.user_id,
-    hasProfile: !!result.profile_id,
-  };
+  return result;
 };
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
@@ -208,66 +194,7 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
   const result = await qb.getRawOne();
   if (!result) return null;
 
-  /* ===================== MAPPING ===================== */
-
-  return {
-    id: result.userId,
-    email: result.email,
-    fullName: result.fullName,
-    passwordHash: result.passwordHash,
-    country: result.country,
-    state: result.state,
-    city: result.city,
-    authType: result.authType,
-    isVerified: result.isVerified,
-    isSuspended: result.isSuspended,
-
-    profile:
-      result.bioEn === null
-        ? null
-        : {
-            bioEn: result.bioEn,
-            bioFr: result.bioFr,
-            bioEs: result.bioEs,
-            bioAr: result.bioAr,
-            heightEn: result.heightEn,
-            heightFr: result.heightFr,
-            heightEs: result.heightEs,
-            heightAr: result.heightAr,
-            dateOfBirth: result.dateOfBirth,
-            occupation: result.occupation,
-            gender: result.gender,
-            bodyType: result.bodyType,
-            relationshipStatus: result.relationshipStatus,
-            childrenPreference: result.childrenPreference,
-          },
-
-    interests: result.interests.length === 0 ? null : result.interests,
-
-    lifestylePreference:
-      result.smoking === null
-        ? null
-        : {
-            smoking: result.smoking,
-            politicalViews: result.politicalViews,
-            diet: result.diet,
-            workoutRoutine: result.workoutRoutine,
-          },
-
-    datingPreference:
-      result.minAge === null
-        ? null
-        : {
-            minAge: result.minAge,
-            maxAge: result.maxAge,
-            interestedIn: result.interestedIn,
-            lookingFor: result.lookingFor,
-          },
-
-    prompts: result.prompts.length === 0 ? null : result.prompts,
-
-    photos: result.photos.length === 0 ? null : result.photos,
-  };
+  return result;
 };
 
 export const save = async (userData: Partial<User>): Promise<User> => {
@@ -275,11 +202,7 @@ export const save = async (userData: Partial<User>): Promise<User> => {
   return UserRepository.save(user);
 };
 
-export const findUsers = async (
-  page = 1,
-  isVerified?: boolean,
-  isSuspended?: boolean,
-): Promise<{ data: any[]; total: number }> => {
+export const findUsers = async (page = 1, isVerified?: boolean, isSuspended?: boolean) => {
   const queryBuilder = AppDataSource.createQueryBuilder()
     .select([
       'u.id AS "userId"',
@@ -306,17 +229,7 @@ export const findUsers = async (
 
   const rawData = await queryBuilder.getRawMany();
 
-  const total = rawData.length > 0 ? Number(rawData[0].total_count) : 0;
-
-  const data = rawData.map((row) => ({
-    userId: row.userId,
-    email: row.email,
-    gender: row.gender,
-    occupation: row.occupation,
-    age: Number(row.age),
-  }));
-
-  return { data, total };
+  return rawData;
 };
 
 export const updatePasswordByEmail = async (

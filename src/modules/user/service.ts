@@ -18,20 +18,96 @@ import {
   findUsers,
   findUserAndProfilePictureById,
 } from './repo';
-import { BadRequestException, NotFoundException } from '@/exceptions';
-import { S3Util } from '@/utils/s3.util';
-import { Role } from '../auth/enums';
+import { BadRequestException } from '@/exceptions';
+import { Role } from '@/modules/auth/enums';
 
 export const getUserDetailsByEmail = async (email: string) => {
-  return findActiveUserByEmailAndRole(email, Role.User);
+  const result = await findActiveUserByEmailAndRole(email, Role.User);
+
+  return {
+    id: result.userId,
+    email: result.email,
+    fullName: result.fullName,
+    passwordHash: result.passwordHash,
+    country: result.country,
+    state: result.state,
+    city: result.city,
+    authType: result.authType,
+    isVerified: result.isVerified,
+    isSuspended: result.isSuspended,
+
+    profile:
+      result.bioEn === null
+        ? null
+        : {
+            bioEn: result.bioEn,
+            bioFr: result.bioFr,
+            bioEs: result.bioEs,
+            bioAr: result.bioAr,
+            heightEn: result.heightEn,
+            heightFr: result.heightFr,
+            heightEs: result.heightEs,
+            heightAr: result.heightAr,
+            dateOfBirth: result.dateOfBirth,
+            occupation: result.occupation,
+            gender: result.gender,
+            bodyType: result.bodyType,
+            relationshipStatus: result.relationshipStatus,
+            childrenPreference: result.childrenPreference,
+          },
+
+    interests: result.interests.length === 0 ? null : result.interests,
+
+    lifestylePreference:
+      result.smoking === null
+        ? null
+        : {
+            smoking: result.smoking,
+            politicalViews: result.politicalViews,
+            diet: result.diet,
+            workoutRoutine: result.workoutRoutine,
+          },
+
+    datingPreference:
+      result.minAge === null
+        ? null
+        : {
+            minAge: result.minAge,
+            maxAge: result.maxAge,
+            interestedIn: result.interestedIn,
+            lookingFor: result.lookingFor,
+          },
+
+    prompts: result.prompts.length === 0 ? null : result.prompts,
+
+    photos: result.photos.length === 0 ? null : result.photos,
+  };
 };
 
 export const getUserAndProfilePictureById = async (userId: string) => {
-  return findUserAndProfilePictureById(userId);
+  const result = await findUserAndProfilePictureById(userId);
+
+  return {
+    id: result.user_id,
+    hasProfilePicture: !!result.photo_id,
+    photo: result.photo_id
+      ? {
+          id: result.photo_id,
+          userId: result.photo_user_id,
+          s3Key: result.photo_s3_key,
+          isPrimary: result.photo_is_primary,
+        }
+      : null,
+  };
 };
 
 export const getUserAndProfileByUserId = async (userId: string) => {
-  return findUserAndProfileById(userId);
+  const result = await findUserAndProfileById(userId);
+
+  return {
+    id: result.user_id,
+    hasProfile: !!result.profile_id,
+  };
 };
 
 export const getUserByEmail = async (email: string): Promise<User | null> => {
@@ -43,16 +119,82 @@ export const getActiveUserByEmail = async (email: string): Promise<User | null> 
 };
 
 export const getActiveUserByEmailAndRole = async (email: string, role: string) => {
-  return findActiveUserByEmailAndRole(email, role);
+  const result = await findActiveUserByEmailAndRole(email, role);
+
+  return {
+    id: result.userId,
+    email: result.email,
+    fullName: result.fullName,
+    passwordHash: result.passwordHash,
+    country: result.country,
+    state: result.state,
+    city: result.city,
+    authType: result.authType,
+    isVerified: result.isVerified,
+    isSuspended: result.isSuspended,
+
+    profile:
+      result.bioEn === null
+        ? null
+        : {
+            bioEn: result.bioEn,
+            bioFr: result.bioFr,
+            bioEs: result.bioEs,
+            bioAr: result.bioAr,
+            heightEn: result.heightEn,
+            heightFr: result.heightFr,
+            heightEs: result.heightEs,
+            heightAr: result.heightAr,
+            dateOfBirth: result.dateOfBirth,
+            occupation: result.occupation,
+            gender: result.gender,
+            bodyType: result.bodyType,
+            relationshipStatus: result.relationshipStatus,
+            childrenPreference: result.childrenPreference,
+          },
+
+    interests: result.interests.length === 0 ? null : result.interests,
+
+    lifestylePreference:
+      result.smoking === null
+        ? null
+        : {
+            smoking: result.smoking,
+            politicalViews: result.politicalViews,
+            diet: result.diet,
+            workoutRoutine: result.workoutRoutine,
+          },
+
+    datingPreference:
+      result.minAge === null
+        ? null
+        : {
+            minAge: result.minAge,
+            maxAge: result.maxAge,
+            interestedIn: result.interestedIn,
+            lookingFor: result.lookingFor,
+          },
+
+    prompts: result.prompts.length === 0 ? null : result.prompts,
+
+    photos: result.photos.length === 0 ? null : result.photos,
+  };
 };
 
-export const getUsers = async (
-  page: number,
-  isVerified: boolean,
-  isSuspended: boolean,
-): Promise<User[]> => {
-  const { data } = await findUsers(page, isVerified, isSuspended);
-  return data;
+export const getUsers = async (page: number, isVerified: boolean, isSuspended: boolean) => {
+  const result = await findUsers(page, isVerified, isSuspended);
+
+  const total = result.length > 0 ? Number(result[0].total_count) : 0;
+
+  const data = result.map((r) => ({
+    userId: r.userId,
+    email: r.email,
+    gender: r.gender,
+    occupation: r.occupation,
+    age: Number(r.age),
+  }));
+
+  return { data, total };
 };
 
 export const saveUser = async (userData: Partial<User>): Promise<User> => {
@@ -73,7 +215,7 @@ export const completeOnboarding = async (data: OnboardingDTO) => {
   try {
     const updatedUser = await updateUserLocation(userId, location, queryRunner.manager);
 
-    const savedProfile = await UserProfileService.saveUserProfile(
+    const savedProfile: any = await UserProfileService.saveUserProfile(
       { userId, ...profile },
       queryRunner.manager,
     );
@@ -87,7 +229,27 @@ export const completeOnboarding = async (data: OnboardingDTO) => {
         ...updatedUser,
         passwordHash: undefined,
       },
-      profile: savedProfile,
+      profile: {
+        id: savedProfile.id,
+        userId: savedProfile.user_id,
+
+        bioEn: savedProfile.bio_en,
+        bioFr: savedProfile.bio_fr,
+        bioAr: savedProfile.bio_ar,
+        bioEs: savedProfile.bio_es,
+
+        heightEn: savedProfile.height_en,
+        heightFr: savedProfile.height_fr,
+        heightAr: savedProfile.height_ar,
+        heightEs: savedProfile.height_es,
+
+        dateOfBirth: savedProfile.date_of_birth,
+        occupation: savedProfile.occupation,
+        gender: savedProfile.gender,
+        bodyType: savedProfile.body_type,
+        relationshipStatus: savedProfile.relationship_status,
+        childrenPreference: savedProfile.children_preference,
+      },
     };
   } catch (error) {
     await queryRunner.rollbackTransaction();
