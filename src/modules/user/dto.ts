@@ -20,13 +20,9 @@ class LocationDTO {
   country!: string;
 
   @Transform(({ value }) => value?.trim())
-  @IsString({ message: 'City must be a string' })
-  @IsNotEmpty({ message: 'City is required' })
   city!: string;
 
   @Transform(({ value }) => value?.trim())
-  @IsString({ message: 'State must be a string' })
-  @IsNotEmpty({ message: 'State is required' })
   state!: string;
 }
 
