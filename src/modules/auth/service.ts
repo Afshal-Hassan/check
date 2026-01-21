@@ -96,6 +96,12 @@ const loginWithEmail = async (
     );
   }
 
+  if (userDetails.isSuspended) {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(LOGIN_ERROR_MESSAGES.ACCOUNT_SUSPENDED, languageCode),
+    );
+  }
+
   const isPasswordValid = await PasswordUtil.comparePassword(password, userDetails.passwordHash);
 
   if (!isPasswordValid) {
