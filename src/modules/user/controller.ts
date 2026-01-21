@@ -23,7 +23,10 @@ export const getUsers = async (req: Request, res: Response) => {
 export const getUserDetailsByEmail = async (req: Request, res: Response) => {
   try {
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await UserService.getUserDetailsByEmail(req.params.email as string);
+    const result = await UserService.getUserDetailsByEmail(
+      req.params.email as string,
+      languageCode,
+    );
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(

@@ -15,8 +15,6 @@ export const findUserAndProfilePictureById = async (userId: string) => {
     .where('user.id = :userId', { userId })
     .getRawOne();
 
-  if (!result) return null;
-
   return result;
 };
 
@@ -28,8 +26,6 @@ export const findUserAndProfileById = async (userId: string) => {
     .addSelect(['profile.id'])
     .where('user.id = :userId', { userId })
     .getRawOne();
-
-  if (!result) return null;
 
   return result;
 };
@@ -77,7 +73,6 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
     /* ===================== FILTERS ===================== */
 
     .where('u.email = :email', { email })
-    .andWhere('u.is_suspended = false')
     .andWhere('r.name = :role', { role: role.toUpperCase() })
 
     /* ===================== SELECT ===================== */
@@ -192,7 +187,6 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
     .limit(1);
 
   const result = await qb.getRawOne();
-  if (!result) return null;
 
   return result;
 };
