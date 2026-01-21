@@ -19,6 +19,12 @@ import {
   findUserAndProfilePictureById,
 } from './repo';
 import { BadRequestException, NotFoundException } from '@/exceptions';
+import { S3Util } from '@/utils/s3.util';
+import { Role } from '../auth/enums';
+
+export const getUserDetailsByEmail = async (email: string) => {
+  return findActiveUserByEmailAndRole(email, Role.User);
+};
 
 export const getUserAndProfilePictureById = async (userId: string) => {
   return findUserAndProfilePictureById(userId);
@@ -57,7 +63,7 @@ export const updateUserPassword = async (email: string, hashedPassword: string) 
   return updatePasswordByEmail(email, hashedPassword);
 };
 
-export const completeOnboarding = async (data: OnboardingDTO, languageCode: string) => {
+export const completeOnboarding = async (data: OnboardingDTO) => {
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
@@ -65,12 +71,6 @@ export const completeOnboarding = async (data: OnboardingDTO, languageCode: stri
   const { userId, location, profile, interests } = data;
 
   try {
-    const user = await getUserAndProfileByUserId(userId);
-
-    if (user?.hasProfile)
-      throw new BadRequestException(
-        MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.PROFILE_ALREADY_SAVED, languageCode),
-      );
     const updatedUser = await updateUserLocation(userId, location, queryRunner.manager);
 
     const savedProfile = await UserProfileService.saveUserProfile(
@@ -120,10 +120,6 @@ export const uploadProfilePictures = async (
     throw new NotFoundException(
       MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
     );
-  if (user.hasProfilePicture)
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.ALREADY_UPLOADED_PICTURE, languageCode),
-    );
 
   if (!files)
     throw new BadRequestException(
@@ -145,6 +141,8 @@ export const uploadProfilePictures = async (
         languageCode,
       ),
     );
+
+  if (user.hasProfilePicture) await S3Util.deleteFolder(`users/${userId}/`);
 
   const photos: {
     user: User;

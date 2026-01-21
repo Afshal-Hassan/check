@@ -20,12 +20,29 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
+export const getUserDetailsByEmail = async (req: Request, res: Response) => {
+  try {
+    const languageCode = HeaderUtil.getLanguageCode(req);
+    const result = await UserService.getUserDetailsByEmail(req.params.email as string);
+
+    res.status(200).json({
+      message: MessageUtil.getLocalizedMessage(
+        USER_SUCCESS_MESSAGES.USER_DETAILS_RETRIEVED,
+        languageCode,
+      ),
+      result,
+    });
+  } catch (err: any) {
+    throw err;
+  }
+};
+
 export const onboarding = async (req: Request, res: Response) => {
   try {
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await UserService.completeOnboarding(req.body, languageCode);
+    const result = await UserService.completeOnboarding(req.body);
 
-    res.status(201).json({
+    res.status(200).json({
       message: MessageUtil.getLocalizedMessage(
         USER_SUCCESS_MESSAGES.ONBOARDING_COMPLETE,
         languageCode,

@@ -6,12 +6,35 @@ export const UserProfileRepository = AppDataSource.getRepository(UserProfile);
 
 export const save = async (
   userProfileData: Partial<UserProfile>,
-  manager: EntityManager,
+  manager?: EntityManager,
 ): Promise<UserProfile> => {
-  const repo = manager ? manager.getRepository(UserProfile) : UserProfileRepository;
-  const userProfile = repo.create(userProfileData);
+  const queryBuilder = manager
+    ? manager.createQueryBuilder()
+    : UserProfileRepository.createQueryBuilder();
 
-  return repo.save(userProfile);
+  const columnMapping: Record<string, string> = {
+    bioEn: 'bio_en',
+    bioFr: 'bio_fr',
+    bioEs: 'bio_es',
+    bioAr: 'bio_ar',
+    dateOfBirth: 'date_of_birth',
+    occupation: 'occupation',
+    gender: 'gender',
+  };
+
+  const columnsToUpdate = Object.keys(userProfileData)
+    .filter((key) => key !== 'user')
+    .map((key) => columnMapping[key] || key);
+
+  const result = await queryBuilder
+    .insert()
+    .into(UserProfile)
+    .values(userProfileData)
+    .orUpdate(columnsToUpdate, ['user_id'])
+    .returning('*')
+    .execute();
+
+  return result.raw[0] as UserProfile;
 };
 
 export const updatePersonalDetailsByUserId = async (

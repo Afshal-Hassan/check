@@ -4,7 +4,7 @@ import { SavePromptDTO } from './dto';
 import { BadRequestException } from '@/exceptions';
 import * as MessageUtil from '@/utils/message.util';
 import { USER_PROMPTS_ERROR_MESSAGES } from './message';
-import { findUserPromptsByUserId, saveUserPromptList } from './repo';
+import { saveUserPromptList } from './repo';
 import * as GoogleTranslateUtil from '@/utils/google-translate.util';
 
 export const saveUserPrompts = async (
@@ -21,14 +21,6 @@ export const saveUserPrompts = async (
         USER_PROMPTS_ERROR_MESSAGES.DUPLICATE_PROMPT_IDS,
         languageCode,
       ),
-    );
-  }
-
-  const prompts = await findUserPromptsByUserId(data.prompts[0].userId, languageCode);
-
-  if (prompts.length > 0) {
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_PROMPTS_ERROR_MESSAGES.ALREADY_SAVED, languageCode),
     );
   }
 

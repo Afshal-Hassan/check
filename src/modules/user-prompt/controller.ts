@@ -9,7 +9,7 @@ export const saveUserPrompts = async (req: Request, res: Response) => {
     const languageCode = HeaderUtil.getLanguageCode(req);
     const result = await UserPromptService.saveUserPrompts(req.body, languageCode);
 
-    res.status(201).json({
+    res.status(200).json({
       message: MessageUtil.getLocalizedMessage(USER_PROMPTS_SUCCESS_MESSAGES.SAVED, languageCode),
       result,
     });

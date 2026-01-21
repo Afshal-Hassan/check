@@ -30,7 +30,19 @@ export const findUserPromptsByUserId = async (userId: string, languageCode: stri
 };
 
 export const saveUserPromptList = async (data: Partial<UserPrompt>[]): Promise<UserPrompt[]> => {
-  const userPrompt = UserPromptRepository.create(data);
+  if (data.length === 0) return [];
 
-  return UserPromptRepository.save(userPrompt);
+  const queryBuilder = UserPromptRepository.createQueryBuilder();
+
+  const columnsToUpdate = ['answer_en', 'answer_fr', 'answer_es', 'answer_ar'];
+
+  const result = await queryBuilder
+    .insert()
+    .into(UserPrompt)
+    .values(data)
+    .orUpdate(columnsToUpdate, ['user_id', 'prompt_id'])
+    .returning('*')
+    .execute();
+
+  return result.raw as UserPrompt[];
 };

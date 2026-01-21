@@ -11,6 +11,12 @@ export const USER_SUCCESS_MESSAGES = {
     es: 'Las imágenes del usuario se han subido correctamente.',
     ar: 'تم تحميل صور المستخدم بنجاح',
   },
+  USER_DETAILS_RETRIEVED: {
+    en: 'User details retrieved successfully.',
+    fr: "Les détails de l'utilisateur ont été récupérés avec succès.",
+    es: 'Los detalles del usuario se recuperaron con éxito.',
+    ar: 'تم استرجاع تفاصيل المستخدم بنجاح',
+  },
 };
 
 export const USER_ERROR_MESSAGES = {
