@@ -14,4 +14,10 @@ export const USER_PROMPTS_ERROR_MESSAGES = {
     es: 'Estas indicaciones del usuario ya están guardadas.',
     ar: 'تم حفظ هذه المطالبات بالفعل',
   },
+  DUPLICATE_PROMPT_IDS: {
+    en: 'Duplicate prompts are not allowed.',
+    fr: 'Les invites en double ne sont pas autorisées.',
+    es: 'No se permiten indicaciones duplicadas.',
+    ar: 'لا يُسمح بالمطالبات المكررة',
+  },
 };

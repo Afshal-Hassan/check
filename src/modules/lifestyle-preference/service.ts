@@ -1,10 +1,7 @@
 import { DeepPartial } from 'typeorm';
 import { LifestylePreference } from './model';
 import { LifestylePreferenceDTO } from './dto';
-import * as MessageUtil from '@/utils/message.util';
 import { findLifestylePreferenceByUserId, save } from './repo';
-import { LIFESTYLE_PREFERENCE_ERROR_MESSAGES } from './message';
-import { BadRequestException } from '@/exceptions';
 
 export const getLifestylePreferenceByUserId = async (
   userId: string,
@@ -14,18 +11,7 @@ export const getLifestylePreferenceByUserId = async (
 
 export const saveLifestylePreference = async (
   data: LifestylePreferenceDTO,
-  languageCode: string,
 ): Promise<LifestylePreference> => {
-  const lifestylePreference = await findLifestylePreferenceByUserId(data.userId);
-
-  if (lifestylePreference)
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(
-        LIFESTYLE_PREFERENCE_ERROR_MESSAGES.ALREADY_SAVED,
-        languageCode,
-      ),
-    );
-
   return save({
     user: { id: data.userId } as DeepPartial<any>,
     smoking: data.smoking,

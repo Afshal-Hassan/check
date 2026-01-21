@@ -14,8 +14,28 @@ export const findLifestylePreferenceByUserId = async (
 };
 
 export const save = async (
-  liefestylePreferenceData: Partial<LifestylePreference>,
+  lifestylePreferenceData: Partial<LifestylePreference>,
 ): Promise<LifestylePreference> => {
-  const lifestylePreference = LifestylePreferenceRepository.create(liefestylePreferenceData);
-  return LifestylePreferenceRepository.save(lifestylePreference);
+  const queryBuilder = LifestylePreferenceRepository.createQueryBuilder();
+
+  const columnMapping: Record<string, string> = {
+    smoking: 'smoking',
+    politicalViews: 'political_views',
+    diet: 'diet',
+    workoutRoutine: 'workout_routine',
+  };
+
+  const columnsToUpdate = Object.keys(lifestylePreferenceData)
+    .filter((key) => key !== 'user')
+    .map((key) => columnMapping[key] || key);
+
+  const result = await queryBuilder
+    .insert()
+    .into(LifestylePreference)
+    .values(lifestylePreferenceData)
+    .orUpdate(columnsToUpdate, ['user_id'])
+    .returning('*')
+    .execute();
+
+  return result.raw[0] as LifestylePreference;
 };

@@ -23,6 +23,14 @@ export const save = async (
 
     await manager.query(
       `
+      DELETE FROM user_interests 
+      WHERE user_id = $1
+      `,
+      [userId],
+    );
+
+    await manager.query(
+      `
       INSERT INTO user_interests (user_id, interest_id)
       SELECT $1, id 
       FROM interests 

@@ -23,6 +23,14 @@ export const save = async (
 
     await manager.query(
       `
+      DELETE FROM user_languages 
+      WHERE user_id = $1
+      `,
+      [userId],
+    );
+
+    await manager.query(
+      `
       INSERT INTO user_languages (user_id, language_id)
       SELECT $1, id
       FROM languages

@@ -7,9 +7,9 @@ import { LIFESTYLE_PREFERENCE_SUCCESS_MESSAGES } from './message';
 export const saveLifestylePreference = async (req: Request, res: Response) => {
   try {
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await LifestylePreferenceService.saveLifestylePreference(req.body, languageCode);
+    const result = await LifestylePreferenceService.saveLifestylePreference(req.body);
 
-    res.status(201).json({
+    res.status(200).json({
       message: MessageUtil.getLocalizedMessage(
         LIFESTYLE_PREFERENCE_SUCCESS_MESSAGES.SAVED,
         languageCode,

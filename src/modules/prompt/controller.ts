@@ -9,7 +9,7 @@ export const getPrompts = async (req: Request, res: Response) => {
     const languageCode = HeaderUtil.getLanguageCode(req);
     const result = await PromptService.getPrompts(languageCode);
 
-    res.status(201).json({
+    res.status(200).json({
       message: MessageUtil.getLocalizedMessage(PROMPT_SUCCESS_MESSAGES.FETCH_LIST, languageCode),
       result,
     });

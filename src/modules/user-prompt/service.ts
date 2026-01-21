@@ -4,18 +4,23 @@ import { SavePromptDTO } from './dto';
 import { BadRequestException } from '@/exceptions';
 import * as MessageUtil from '@/utils/message.util';
 import { USER_PROMPTS_ERROR_MESSAGES } from './message';
-import { findUserPromptsByUserId, saveUserPromptList } from './repo';
+import { saveUserPromptList } from './repo';
 import * as GoogleTranslateUtil from '@/utils/google-translate.util';
 
 export const saveUserPrompts = async (
   data: SavePromptDTO,
   languageCode: string,
 ): Promise<UserPrompt[]> => {
-  const prompts = await findUserPromptsByUserId(data.prompts[0].userId, languageCode);
+  const promptIds = data.prompts.map((p) => p.promptId);
 
-  if (prompts.length > 0) {
+  const uniquePromptIds = new Set(promptIds);
+
+  if (promptIds.length !== uniquePromptIds.size) {
     throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_PROMPTS_ERROR_MESSAGES.ALREADY_SAVED, languageCode),
+      MessageUtil.getLocalizedMessage(
+        USER_PROMPTS_ERROR_MESSAGES.DUPLICATE_PROMPT_IDS,
+        languageCode,
+      ),
     );
   }
 

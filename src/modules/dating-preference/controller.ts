@@ -7,9 +7,9 @@ import { DATING_PREFERENCE_SUCCESS_MESSAGES } from './message';
 export const saveDatingPreference = async (req: Request, res: Response) => {
   try {
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await DatingPreferenceService.saveDatingPreference(req.body, languageCode);
+    const result = await DatingPreferenceService.saveDatingPreference(req.body);
 
-    res.status(201).json({
+    res.status(200).json({
       message: MessageUtil.getLocalizedMessage(
         DATING_PREFERENCE_SUCCESS_MESSAGES.SAVED,
         languageCode,

@@ -9,7 +9,7 @@ export const globalErrorHandler = (err: any, _: Request, res: Response, __: Next
   const errorResponse = {
     success: false,
     status: statusCode,
-    message,
+    error: message,
   };
 
   console.error(err);
