@@ -5,6 +5,6 @@ export const translateText = async (text: string, targetLang: string): Promise<s
     const result = await translate(text, { to: targetLang });
     return result.text;
   } catch (error) {
-    throw new Error('Translation failed');
+    return text;
   }
 };

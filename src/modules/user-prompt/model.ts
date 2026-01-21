@@ -1,7 +1,8 @@
 import { User } from '@/modules/user/model';
 import { Prompt } from '@/modules/prompt/model';
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, JoinColumn, Unique } from 'typeorm';
 
+@Unique(['user', 'prompt'])
 @Entity('user_prompts')
 export class UserPrompt {
   @PrimaryGeneratedColumn('uuid')

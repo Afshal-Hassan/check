@@ -11,6 +11,19 @@ export const saveUserPrompts = async (
   data: SavePromptDTO,
   languageCode: string,
 ): Promise<UserPrompt[]> => {
+  const promptIds = data.prompts.map((p) => p.promptId);
+
+  const uniquePromptIds = new Set(promptIds);
+
+  if (promptIds.length !== uniquePromptIds.size) {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(
+        USER_PROMPTS_ERROR_MESSAGES.DUPLICATE_PROMPT_IDS,
+        languageCode,
+      ),
+    );
+  }
+
   const prompts = await findUserPromptsByUserId(data.prompts[0].userId, languageCode);
 
   if (prompts.length > 0) {
