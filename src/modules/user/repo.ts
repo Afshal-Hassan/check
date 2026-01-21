@@ -176,7 +176,7 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
         json_agg(
           DISTINCT jsonb_build_object(
             'id', uph.id,
-            's3Key', uph.s3_key,
+             'image', :cdn || '/' || uph.s3_key,
             'isPrimary', uph.is_primary
           )
         ) FILTER (WHERE uph.id IS NOT NULL),
@@ -196,6 +196,10 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
       dp.id
     `,
     )
+
+    /* ===================== PARAMS ===================== */
+
+    .setParameter('cdn', process.env.AWS_CLOUDFRONT_URL)
 
     /* ===================== LIMIT ===================== */
 
