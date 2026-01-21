@@ -37,10 +37,7 @@ export const saveUserProfile = async (
   );
 };
 
-export const updatePersonalDetails = async (
-  userId: string,
-  data: PersonalDetailsDTO,
-): Promise<UserProfile> => {
+export const updatePersonalDetails = async (userId: string, data: PersonalDetailsDTO) => {
   const heightEn = await GoogleTranslateUtil.translateText(data.height, 'en');
   const heightFr = await GoogleTranslateUtil.translateText(data.height, 'fr');
   const heightEs = await GoogleTranslateUtil.translateText(data.height, 'es');
@@ -53,7 +50,7 @@ export const updatePersonalDetails = async (
   try {
     await LanguageService.saveLanguages({ userId, languages: data.languages }, queryRunner.manager);
 
-    const updatedProfile = await updatePersonalDetailsByUserId(userId, {
+    const updatedProfile: any = await updatePersonalDetailsByUserId(userId, {
       bodyType: data.bodyType,
       relationshipStatus: data.relationshipStatus,
       childrenPreference: data.childrenPreference,
@@ -65,7 +62,29 @@ export const updatePersonalDetails = async (
 
     await queryRunner.commitTransaction();
 
-    return updatedProfile;
+    return {
+      profile: {
+        id: updatedProfile.id,
+        userId: updatedProfile.user_id,
+
+        bioEn: updatedProfile.bio_en,
+        bioFr: updatedProfile.bio_fr,
+        bioAr: updatedProfile.bio_ar,
+        bioEs: updatedProfile.bio_es,
+
+        heightEn: updatedProfile.height_en,
+        heightFr: updatedProfile.height_fr,
+        heightAr: updatedProfile.height_ar,
+        heightEs: updatedProfile.height_es,
+
+        dateOfBirth: updatedProfile.date_of_birth,
+        occupation: updatedProfile.occupation,
+        gender: updatedProfile.gender,
+        bodyType: updatedProfile.body_type,
+        relationshipStatus: updatedProfile.relationship_status,
+        childrenPreference: updatedProfile.children_preference,
+      },
+    };
   } catch (error) {
     await queryRunner.rollbackTransaction();
 

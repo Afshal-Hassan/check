@@ -7,10 +7,7 @@ import * as MessageUtil from '@/utils/message.util';
 import { USER_PROMPTS_ERROR_MESSAGES } from './message';
 import * as GoogleTranslateUtil from '@/utils/google-translate.util';
 
-export const saveUserPrompts = async (
-  data: SavePromptDTO,
-  languageCode: string,
-): Promise<UserPrompt[]> => {
+export const saveUserPrompts = async (data: SavePromptDTO, languageCode: string) => {
   const promptIds = data.prompts.map((p) => p.promptId);
 
   const uniquePromptIds = new Set(promptIds);
@@ -44,5 +41,15 @@ export const saveUserPrompts = async (
     }),
   );
 
-  return saveUserPromptList(translatedPrompts);
+  const savedPrompts: any = await saveUserPromptList(translatedPrompts);
+
+  return savedPrompts.map((prompt: any) => ({
+    id: prompt.id,
+    answerEn: prompt.answer_en,
+    answerFr: prompt.answer_fr,
+    answerEs: prompt.answer_es,
+    answerAr: prompt.answer_ar,
+    promptId: prompt.prompt_id,
+    userId: prompt.user_id,
+  }));
 };
