@@ -92,7 +92,7 @@ const loginWithEmail = async (
 
   if (!userDetails) {
     throw new NotFoundException(
-      MessageUtil.getLocalizedMessage(LOGIN_ERROR_MESSAGES.INVALID_EMAIL, languageCode),
+      MessageUtil.getLocalizedMessage(LOGIN_ERROR_MESSAGES.INVALID_CREDENTIALS, languageCode),
     );
   }
 
