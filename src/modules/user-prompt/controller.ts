@@ -6,7 +6,7 @@ import { USER_PROMPTS_SUCCESS_MESSAGES } from './message';
 
 export const saveUserPrompts = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any)?.user?.userId;
+    const userId = (req as any).user?.userId;
     const languageCode = HeaderUtil.getLanguageCode(req);
     const result = await UserPromptService.saveUserPrompts(userId, req.body, languageCode);
 

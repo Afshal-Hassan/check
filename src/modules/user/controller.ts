@@ -40,7 +40,7 @@ export const getUserDetailsByEmail = async (req: Request, res: Response) => {
 
 export const onboarding = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any)?.user?.userId;
+    const userId = (req as any).user?.userId;
     const languageCode = HeaderUtil.getLanguageCode(req);
     const result = await UserService.completeOnboarding(userId, req.body);
 
@@ -58,7 +58,7 @@ export const onboarding = async (req: Request, res: Response) => {
 
 export const uploadProfilePictures = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any)?.user?.userId;
+    const userId = (req as any).user?.userId;
     const languageCode = HeaderUtil.getLanguageCode(req);
     const files = req.files as
       | {

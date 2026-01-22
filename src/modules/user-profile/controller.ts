@@ -6,7 +6,7 @@ import { USER_PROFILE_SUCCESS_MESSAGES } from './message';
 
 export const updatePersonalDetails = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any)?.user?.userId;
+    const userId = (req as any).user?.userId;
     const languageCode = HeaderUtil.getLanguageCode(req);
     const result = await UserProfileService.updatePersonalDetails(userId, req.body);
 
