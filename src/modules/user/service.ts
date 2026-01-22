@@ -54,13 +54,19 @@ export const getUserDetailsByEmail = async (email: string, languageCode: string)
             bioFr: result.bioFr,
             bioEs: result.bioEs,
             bioAr: result.bioAr,
+            dateOfBirth: result.dateOfBirth,
+            occupation: result.occupation,
+            gender: result.gender,
+          },
+
+    personalDetail:
+      result.heightEn === null
+        ? null
+        : {
             heightEn: result.heightEn,
             heightFr: result.heightFr,
             heightEs: result.heightEs,
             heightAr: result.heightAr,
-            dateOfBirth: result.dateOfBirth,
-            occupation: result.occupation,
-            gender: result.gender,
             bodyType: result.bodyType,
             relationshipStatus: result.relationshipStatus,
             childrenPreference: result.childrenPreference,
@@ -157,13 +163,19 @@ export const getActiveUserByEmailAndRole = async (email: string, role: string) =
             bioFr: result.bioFr,
             bioEs: result.bioEs,
             bioAr: result.bioAr,
+            dateOfBirth: result.dateOfBirth,
+            occupation: result.occupation,
+            gender: result.gender,
+          },
+
+    personalDetail:
+      result.heightEn === null
+        ? null
+        : {
             heightEn: result.heightEn,
             heightFr: result.heightFr,
             heightEs: result.heightEs,
             heightAr: result.heightAr,
-            dateOfBirth: result.dateOfBirth,
-            occupation: result.occupation,
-            gender: result.gender,
             bodyType: result.bodyType,
             relationshipStatus: result.relationshipStatus,
             childrenPreference: result.childrenPreference,
