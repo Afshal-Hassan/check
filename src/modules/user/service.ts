@@ -233,12 +233,12 @@ export const updateUserPassword = async (email: string, hashedPassword: string) 
   return updatePasswordByEmail(email, hashedPassword);
 };
 
-export const completeOnboarding = async (data: OnboardingDTO) => {
+export const completeOnboarding = async (userId: string, data: OnboardingDTO) => {
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
 
-  const { userId, location, profile, interests } = data;
+  const { location, profile, interests } = data;
 
   try {
     const updatedUser = await updateUserLocation(userId, location, queryRunner.manager);

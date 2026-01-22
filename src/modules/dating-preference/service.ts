@@ -9,9 +9,9 @@ export const getDatingPreferenceByUserId = async (
   return findDatingPreferenceByUserId(userId);
 };
 
-export const saveDatingPreference = async (data: DatingPreferenceDTO) => {
+export const saveDatingPreference = async (userId: string, data: DatingPreferenceDTO) => {
   const datingPreference: any = await save({
-    user: { id: data.userId } as DeepPartial<any>,
+    user: { id: userId } as DeepPartial<any>,
     minAge: data.minAge,
     maxAge: data.maxAge,
     interestedIn: data.interestedIn,

@@ -11,10 +11,6 @@ import {
 } from 'class-validator';
 
 export class PersonalDetailsDTO {
-  @IsUUID('4', { message: 'User ID must be a valid UUID' })
-  @IsNotEmpty({ message: 'User ID is required' })
-  userId!: string;
-
   @IsEnum(BodyTypeEnum, {
     message: `Body type must be one of: ${Object.values(BodyTypeEnum).join(', ')}`,
   })

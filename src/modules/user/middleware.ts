@@ -6,7 +6,7 @@ import * as HeaderUtil from '@/utils/header.util';
 import * as MessageUtil from '@/utils/message.util';
 
 export const deleteOldFilesFromS3 = async (req: any, _: any, next: any) => {
-  const userId = req.params.userId;
+  const userId = req.user.userId;
   const languageCode = HeaderUtil.getLanguageCode(req);
 
   const user = await UserService.getUserAndProfilePictureById(userId);

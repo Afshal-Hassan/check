@@ -8,12 +8,12 @@ import { onboarding, getUserDetailsByEmail, uploadProfilePictures, getUsers } fr
 const router = Router();
 
 router.get('/all', getUsers);
-router.get('/details/:email', getUserDetailsByEmail);
+router.get('/details', getUserDetailsByEmail);
 router.post('/onboarding', validateDTO(OnboardingDTO), onboarding);
 
 /* Images Upload */
 router.put(
-  '/pictures/upload/:userId',
+  '/pictures/upload',
   deleteOldFilesFromS3,
   upload.fields([
     { name: 'profilePicture', maxCount: 1 },

@@ -2,10 +2,6 @@ import { IsEnum, IsNotEmpty, IsUUID } from 'class-validator';
 import { DietEnum, PoliticalEnum, SmokingEnum, WorkoutEnum } from './enums';
 
 export class LifestylePreferenceDTO {
-  @IsUUID('4', { message: 'User ID must be a valid UUID' })
-  @IsNotEmpty({ message: 'User ID is required' })
-  userId!: string;
-
   @IsEnum(SmokingEnum, {
     message: `Smoking preference must be one of: ${Object.values(SmokingEnum).join(', ')}`,
   })

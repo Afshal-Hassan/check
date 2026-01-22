@@ -50,10 +50,6 @@ class ProfileDTO {
 }
 
 export class OnboardingDTO {
-  @IsUUID('4', { message: 'User ID must be a valid UUID' })
-  @IsNotEmpty({ message: 'User ID is required' })
-  userId!: string;
-
   @IsDefined({ message: 'Location is required' })
   @ValidateNested()
   @Type(() => LocationDTO)
