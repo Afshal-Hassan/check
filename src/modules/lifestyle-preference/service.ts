@@ -9,9 +9,9 @@ export const getLifestylePreferenceByUserId = async (
   return findLifestylePreferenceByUserId(userId);
 };
 
-export const saveLifestylePreference = async (data: LifestylePreferenceDTO) => {
+export const saveLifestylePreference = async (userId: string, data: LifestylePreferenceDTO) => {
   const lifestylePreference: any = await save({
-    user: { id: data.userId } as DeepPartial<any>,
+    user: { id: userId } as DeepPartial<any>,
     smoking: data.smoking,
     politicalViews: data.politicalViews,
     diet: data.diet,

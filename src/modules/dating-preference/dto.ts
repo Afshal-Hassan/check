@@ -1,11 +1,7 @@
 import { InterestedInEnum, LookingForEnum } from './enums';
-import { IsEnum, IsInt, IsNotEmpty, IsUUID, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, Max, Min } from 'class-validator';
 
 export class DatingPreferenceDTO {
-  @IsUUID('4', { message: 'User ID must be a valid UUID' })
-  @IsNotEmpty({ message: 'User ID is required' })
-  userId!: string;
-
   @IsInt({ message: 'Minimum age must be an integer' })
   @Min(18, { message: 'Minimum age must be at least 18' })
   @Max(80, { message: 'Minimum age cannot exceed 80' })

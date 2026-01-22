@@ -22,11 +22,9 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const getUserDetailsByEmail = async (req: Request, res: Response) => {
   try {
+    const email = (req as any).user.email as string;
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await UserService.getUserDetailsByEmail(
-      req.params.email as string,
-      languageCode,
-    );
+    const result = await UserService.getUserDetailsByEmail(email, languageCode);
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(
@@ -42,8 +40,9 @@ export const getUserDetailsByEmail = async (req: Request, res: Response) => {
 
 export const onboarding = async (req: Request, res: Response) => {
   try {
+    const userId = (req as any)?.user?.userId;
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await UserService.completeOnboarding(req.body);
+    const result = await UserService.completeOnboarding(userId, req.body);
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(
@@ -59,6 +58,7 @@ export const onboarding = async (req: Request, res: Response) => {
 
 export const uploadProfilePictures = async (req: Request, res: Response) => {
   try {
+    const userId = (req as any)?.user?.userId;
     const languageCode = HeaderUtil.getLanguageCode(req);
     const files = req.files as
       | {
@@ -67,11 +67,7 @@ export const uploadProfilePictures = async (req: Request, res: Response) => {
         }
       | undefined;
 
-    const result = await UserService.uploadProfilePictures(
-      req.params.userId as string,
-      files,
-      languageCode,
-    );
+    const result = await UserService.uploadProfilePictures(userId as string, files, languageCode);
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(USER_SUCCESS_MESSAGES.IMAGES_UPLOADED, languageCode),

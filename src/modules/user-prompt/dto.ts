@@ -13,10 +13,6 @@ import {
 class PromptItemDTO {
   @IsUUID('4', { message: 'User ID must be a valid UUID' })
   @IsNotEmpty({ message: 'User ID is required' })
-  userId!: string;
-
-  @IsUUID('4', { message: 'User ID must be a valid UUID' })
-  @IsNotEmpty({ message: 'User ID is required' })
   promptId!: string;
 
   @Transform(({ value }) => value?.trim())
