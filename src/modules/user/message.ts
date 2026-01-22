@@ -50,4 +50,10 @@ export const USER_ERROR_MESSAGES = {
     es: 'Se requiere al menos una imagen',
     ar: 'مطلوب صورة واحدة على الأقل',
   },
+  ACCOUNT_SUSPENDED: {
+    en: 'Your account is suspended',
+    fr: 'Votre compte est suspendu',
+    es: 'Tu cuenta está suspendida',
+    ar: 'تم تعليق حسابك',
+  },
 };

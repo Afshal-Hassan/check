@@ -21,8 +21,18 @@ import {
 import { BadRequestException } from '@/exceptions';
 import { Role } from '@/modules/auth/enums';
 
-export const getUserDetailsByEmail = async (email: string) => {
+export const getUserDetailsByEmail = async (email: string, languageCode: string) => {
   const result = await findActiveUserByEmailAndRole(email, Role.User);
+
+  if (!result)
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
+    );
+
+  if (result.isSuspended)
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.ACCOUNT_SUSPENDED, languageCode),
+    );
 
   return {
     id: result.userId,
@@ -87,6 +97,8 @@ export const getUserDetailsByEmail = async (email: string) => {
 export const getUserAndProfilePictureById = async (userId: string) => {
   const result = await findUserAndProfilePictureById(userId);
 
+  if (!result) return null;
+
   return {
     id: result.user_id,
     hasProfilePicture: !!result.photo_id,
@@ -104,6 +116,8 @@ export const getUserAndProfilePictureById = async (userId: string) => {
 export const getUserAndProfileByUserId = async (userId: string) => {
   const result = await findUserAndProfileById(userId);
 
+  if (!result) return null;
+
   return {
     id: result.user_id,
     hasProfile: !!result.profile_id,
@@ -120,6 +134,8 @@ export const getActiveUserByEmail = async (email: string): Promise<User | null> 
 
 export const getActiveUserByEmailAndRole = async (email: string, role: string) => {
   const result = await findActiveUserByEmailAndRole(email, role);
+
+  if (!result) return null;
 
   return {
     id: result.userId,

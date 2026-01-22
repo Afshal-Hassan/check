@@ -24,9 +24,11 @@ export const save = async (
     await manager.query(
       `
       DELETE FROM user_languages 
-      WHERE user_id = $1
+      WHERE user_id = $1 AND language_id NOT IN (
+        SELECT id FROM languages WHERE name = ANY($2)
+      )
       `,
-      [userId],
+      [userId, languages],
     );
 
     await manager.query(

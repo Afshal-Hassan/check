@@ -7,7 +7,7 @@ export const findAllPrompts = async (languageCode: string): Promise<Prompt[]> =>
   const questionColumnMap = {
     en: 'questionEn',
     fr: 'questionFr',
-    es: 'questionSp',
+    es: 'questionEs',
     ar: 'questionAr',
   };
 

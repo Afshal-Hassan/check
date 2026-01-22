@@ -24,9 +24,11 @@ export const save = async (
     await manager.query(
       `
       DELETE FROM user_interests 
-      WHERE user_id = $1
+      WHERE user_id = $1 AND interest_id NOT IN (
+        SELECT id FROM interests WHERE name = ANY($2)
+      )
       `,
-      [userId],
+      [userId, interestNames],
     );
 
     await manager.query(
