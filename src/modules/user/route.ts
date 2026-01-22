@@ -7,10 +7,14 @@ import { onboarding, getUserDetailsByEmail, uploadProfilePictures, getUsers } fr
 
 const router = Router();
 
+/* *****  GET  ***** */
 router.get('/all', getUsers);
 router.get('/details', getUserDetailsByEmail);
+
+/* *****  POST  ***** */
 router.post('/onboarding', validateDTO(OnboardingDTO), onboarding);
 
+/* *****  PUT  ***** */
 /* Images Upload */
 router.put(
   '/pictures/upload',
