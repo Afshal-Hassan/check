@@ -11,7 +11,7 @@ export const getPrompts = async (req: Request, res: Response) => {
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(PROMPT_SUCCESS_MESSAGES.FETCH_LIST, languageCode),
-      result,
+      result: result,
     });
   } catch (err: any) {
     throw err;
