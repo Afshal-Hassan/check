@@ -14,6 +14,7 @@ export enum PoliticalEnum {
 }
 
 export enum DietEnum {
+  VEGAN = 'vegan',
   OMNIVORE = 'omnivore',
   VEGETARIAN = 'vegetarian',
   PESCATARIAN = 'pescatarian',
