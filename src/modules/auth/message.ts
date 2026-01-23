@@ -11,11 +11,11 @@ export const AUTH_SUCCESS_MESSAGES = {
     es: 'El registro se ha completado',
     ar: 'تم إكمال التسجيل',
   },
-  LOGIN_COMPLETED: {
-    en: 'Login has been completed',
-    fr: 'La connexion a été complétée',
-    es: 'El inicio de sesión se ha completado',
-    ar: 'تم إكمال تسجيل الدخول',
+  LOGIN_SUCCESSFUL: {
+    en: 'Login successful',
+    fr: 'Connexion réussie',
+    es: 'Inicio de sesión exitoso',
+    ar: 'تم تسجيل الدخول بنجاح',
   },
   PASSWORD_RESET_OTP_SENT: {
     en: 'A One-Time Password (OTP) has been sent to your email. Please enter it to proceed with the password reset.',

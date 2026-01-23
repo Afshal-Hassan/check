@@ -41,7 +41,10 @@ export const login = async (req: Request, res: Response) => {
     const result = await AuthService.login(req.body, languageCode);
 
     res.status(200).json({
-      message: MessageUtil.getLocalizedMessage(AUTH_SUCCESS_MESSAGES.LOGIN_COMPLETED, languageCode),
+      message: MessageUtil.getLocalizedMessage(
+        AUTH_SUCCESS_MESSAGES.LOGIN_SUCCESSFUL,
+        languageCode,
+      ),
       ...result,
     });
   } catch (err: any) {
