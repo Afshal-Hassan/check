@@ -11,7 +11,7 @@ export enum RelationshipStatusEnum {
   SINGLE = 'single',
   DIVORCED = 'divorced',
   WIDOWED = 'widowed',
-  SEPARATED = 'separated',
+  SEPARATED = 'seperated',
 }
 
 export enum ChildrenEnum {
