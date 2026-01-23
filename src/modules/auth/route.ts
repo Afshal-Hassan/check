@@ -11,7 +11,7 @@ router.post('/complete-signup', validateDTO(CompleteSignupDto), completeSignup);
 router.post('/login', validateDTO(LoginDto), login);
 router.post(
   '/forgot-password',
-  forgotPasswordLimiter,
+  // forgotPasswordLimiter,
   validateDTO(ForgotPasswordDto),
   forgotPassword,
 );
