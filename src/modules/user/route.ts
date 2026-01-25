@@ -3,13 +3,13 @@ import { OnboardingDTO } from './dto';
 import { validateDTO } from '@/middleware';
 import { upload } from '@/config/multer.config';
 import { deleteOldFilesFromS3 } from './middleware';
-import { onboarding, getUserDetailsByEmail, uploadProfilePictures, getUsers } from './controller';
+import { onboarding, getUserDetailsById, uploadProfilePictures, getUsers } from './controller';
 
 const router = Router();
 
 /* *****  GET  ***** */
 router.get('/all', getUsers);
-router.get('/details', getUserDetailsByEmail);
+router.get('/details', getUserDetailsById);
 
 /* *****  POST  ***** */
 router.post('/onboarding', validateDTO(OnboardingDTO), onboarding);

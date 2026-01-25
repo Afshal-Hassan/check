@@ -19,7 +19,8 @@ import {
   findActiveUserByEmailAndRole,
   findUsers,
   findUserAndProfilePictureById,
-  findUsersById,
+  findActiveUserById,
+  findActiveUsersById,
 } from './repo';
 
 export const getUsersWithSimilarFaces = async (userId: string, languageCode: string) => {
@@ -35,7 +36,7 @@ export const getUsersWithSimilarFaces = async (userId: string, languageCode: str
     user.profilePicture?.s3Key,
   );
 
-  const similarUsers = await findUsersById(users.map((u) => u.userId!));
+  const similarUsers = await findActiveUsersById(users.map((u) => u.userId!));
 
   return similarUsers.map((user) => ({
     id: user.userId,
@@ -102,8 +103,8 @@ export const getUsersWithSimilarFaces = async (userId: string, languageCode: str
   }));
 };
 
-export const getUserDetailsByEmail = async (email: string, languageCode: string) => {
-  const result = await findActiveUserByEmailAndRole(email, Role.User);
+export const getUserDetailsById = async (userId: string, languageCode: string) => {
+  const result = await findActiveUserById(userId);
 
   if (!result)
     throw new BadRequestException(

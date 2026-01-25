@@ -20,11 +20,11 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserDetailsByEmail = async (req: Request, res: Response) => {
+export const getUserDetailsById = async (req: Request, res: Response) => {
   try {
-    const email = (req as any).user.email as string;
+    const userId = (req as any).user?.userId as string;
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await UserService.getUserDetailsByEmail(email, languageCode);
+    const result = await UserService.getUserDetailsById(userId, languageCode);
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(
