@@ -1,8 +1,151 @@
 import { User } from './model';
 import { EntityManager, UpdateResult } from 'typeorm';
 import { AppDataSource } from '@/config/data-source';
+import { ENV } from '@/config/env.config';
 
 export const UserRepository = AppDataSource.getRepository(User);
+
+export const findUsersById = async (userIds: string[]) => {
+  if (!userIds.length) return [];
+
+  const qb = AppDataSource.createQueryBuilder(User, 'u')
+    /* ===================== JOINS ===================== */
+
+    // Role
+    .innerJoin('u.role', 'r')
+
+    // Profile
+    .leftJoin('user_profiles', 'up', 'up.user_id = u.id')
+
+    // Interests
+    .leftJoin('user_interests', 'ui', 'ui.user_id = u.id')
+    .leftJoin('interests', 'i', 'i.id = ui.interest_id')
+
+    // Lifestyle
+    .leftJoin('lifestyle_preferences', 'lp', 'lp.user_id = u.id')
+
+    // Dating preference
+    .leftJoin('dating_preferences', 'dp', 'dp.user_id = u.id')
+
+    // Prompts
+    .leftJoin('user_prompts', 'upm', 'upm.user_id = u.id')
+    .leftJoin('prompts', 'p', 'p.id = upm.prompt_id')
+
+    // Photos
+    .leftJoin('user_photos', 'uph', 'uph.user_id = u.id')
+
+    /* ===================== FILTER ===================== */
+
+    .where('u.id IN (:...userIds)', { userIds })
+
+    /* ===================== SELECT ===================== */
+
+    .select([
+      /* ---------- USER ---------- */
+      'u.id AS "userId"',
+      'u.full_name AS "fullName"',
+      'u.email AS "email"',
+      'u.country AS "country"',
+      'u.state AS "state"',
+      'u.city AS "city"',
+      'u.auth_type AS "authType"',
+      'u.is_verified AS "isVerified"',
+      'u.is_suspended AS "isSuspended"',
+
+      /* ---------- PROFILE ---------- */
+      'up.bio_en AS "bioEn"',
+      'up.bio_fr AS "bioFr"',
+      'up.bio_es AS "bioEs"',
+      'up.bio_ar AS "bioAr"',
+      'up.height_en AS "heightEn"',
+      'up.height_fr AS "heightFr"',
+      'up.height_es AS "heightEs"',
+      'up.height_ar AS "heightAr"',
+      'up.date_of_birth AS "dateOfBirth"',
+      'up.occupation AS "occupation"',
+      'up.gender AS "gender"',
+      'up.body_type AS "bodyType"',
+      'up.relationship_status AS "relationshipStatus"',
+      'up.children_preference AS "childrenPreference"',
+
+      /* ---------- INTERESTS ---------- */
+      `
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', i.id,
+            'name', i.name
+          )
+        ) FILTER (WHERE i.id IS NOT NULL),
+        '[]'
+      ) AS "interests"
+      `,
+
+      /* ---------- LIFESTYLE ---------- */
+      'lp.smoking AS "smoking"',
+      'lp.political_views AS "politicalViews"',
+      'lp.diet AS "diet"',
+      'lp.workout_routine AS "workoutRoutine"',
+
+      /* ---------- DATING ---------- */
+      'dp.min_age AS "minAge"',
+      'dp.max_age AS "maxAge"',
+      'dp.interested_in AS "interestedIn"',
+      'dp.looking_for AS "lookingFor"',
+
+      /* ---------- PROMPTS ---------- */
+      `
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', p.id,
+            'questionEn', p.question_en,
+            'questionFr', p.question_fr,
+            'questionEs', p.question_es,
+            'questionAr', p.question_ar,
+            'answerEn', upm.answer_en,
+            'answerFr', upm.answer_fr,
+            'answerEs', upm.answer_es,
+            'answerAr', upm.answer_ar
+          )
+        ) FILTER (WHERE p.id IS NOT NULL),
+        '[]'
+      ) AS "prompts"
+      `,
+
+      /* ---------- PHOTOS ---------- */
+      `
+      COALESCE(
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', uph.id,
+            'image', :cdn || '/' || uph.s3_key,
+            'isPrimary', uph.is_primary
+          )
+        ) FILTER (WHERE uph.id IS NOT NULL),
+        '[]'
+      ) AS "photos"
+      `,
+    ])
+
+    /* ===================== GROUP BY ===================== */
+
+    .groupBy(
+      `
+      u.id,
+      r.id,
+      up.id,
+      lp.id,
+      dp.id
+    `,
+    )
+
+    /* ===================== PARAMS ===================== */
+
+    .setParameter('cdn', ENV.AWS.CLOUDFRONT.URL);
+
+  return qb.getRawMany();
+};
 
 export const findUserAndProfilePictureById = async (userId: string) => {
   const result = await AppDataSource.getRepository(User)
@@ -180,7 +323,7 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
 
     /* ===================== PARAMS ===================== */
 
-    .setParameter('cdn', process.env.AWS_CLOUDFRONT_URL)
+    .setParameter('cdn', ENV.AWS.CLOUDFRONT.URL)
 
     /* ===================== LIMIT ===================== */
 

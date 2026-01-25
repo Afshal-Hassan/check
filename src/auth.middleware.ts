@@ -1,3 +1,4 @@
+import { ENV } from '@/config/env.config';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import * as HeaderUtil from '@/utils/header.util';
 import * as MessageUtil from '@/utils/message.util';
@@ -87,7 +88,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   }
 
   const token = authHeader.split(' ')[1];
-  const secret = process.env.JWT_SECRET;
+  const secret = ENV.JWT.SECRET;
 
   if (!secret) {
     return res.status(500).json({

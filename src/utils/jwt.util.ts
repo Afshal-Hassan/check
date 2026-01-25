@@ -1,3 +1,4 @@
+import { ENV } from '@/config/env.config';
 import { UnauthorizedException } from '@/exceptions';
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 
@@ -12,8 +13,8 @@ interface TokenPayload {
 }
 
 export const generateToken = (user: User, role: string): string => {
-  const secret = process.env.JWT_SECRET;
-  const expiresIn: any = process.env.JWT_EXPIRES_IN || '30d';
+  const secret = ENV.JWT.SECRET;
+  const expiresIn: any = ENV.JWT.EXPIRES_IN;
 
   if (!secret) {
     throw new Error('JWT_SECRET is not defined');
@@ -27,7 +28,7 @@ export const generateToken = (user: User, role: string): string => {
 };
 
 export const verifyToken = (token: string): TokenPayload => {
-  const secret = process.env.JWT_SECRET;
+  const secret = ENV.JWT.SECRET;
 
   if (!secret) {
     throw new Error('JWT_SECRET is not defined');

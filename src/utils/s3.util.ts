@@ -1,4 +1,5 @@
 import { s3 } from '@/config/aws-s3.config';
+import { ENV } from '@/config/env.config';
 import {
   DeleteObjectCommand,
   ListObjectsV2Command,
@@ -7,7 +8,7 @@ import {
 
 export class S3Util {
   private static s3Client = s3;
-  private static bucketName = process.env.AWS_S3_BUCKET_NAME as string;
+  private static bucketName = ENV.AWS.S3.BUCKET_NAME as string;
 
   /**
    * Delete a single file from S3
