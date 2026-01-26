@@ -62,4 +62,22 @@ export const USER_ERROR_MESSAGES = {
     es: 'Tu cuenta está suspendida',
     ar: 'تم تعليق حسابك',
   },
+  NO_VERIFICATION_IMAGE_UPLOADED: {
+    en: 'No verification image uploaded',
+    fr: 'Aucune image de vérification téléchargée',
+    es: 'No se ha subido ninguna imagen de verificación',
+    ar: 'لم يتم تحميل أي صورة للتحقق',
+  },
+  USER_VERIFICATION_FAILED: {
+    en: 'User verification failed',
+    fr: "La vérification de l'utilisateur a échoué",
+    es: 'La verificación del usuario falló',
+    ar: 'فشل التحقق من المستخدم',
+  },
+  IMAGE_PROCESSING_FAILED: {
+    en: 'AWS Rekognition cannot process one of the images. Make sure it is a valid JPEG/PNG with a clear face.',
+    fr: "AWS Rekognition ne peut pas traiter l'une des images. Assurez-vous qu'il s'agit d'un JPEG/PNG valide avec un visage clair.",
+    es: 'AWS Rekognition no puede procesar una de las imágenes. Asegúrate de que sea un JPEG/PNG válido con un rostro claro.',
+    ar: 'لا يمكن لـ AWS Rekognition معالجة إحدى الصور. تأكد من أنها JPEG/PNG صالحة وبها وجه واضح.',
+  },
 };

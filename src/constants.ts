@@ -19,3 +19,7 @@ export const toBase64 = (bytes: any) => {
   if (!bytes) return null;
   return Buffer.from(bytes).toString('base64');
 };
+
+export const asyncHandler = (fn: any) => (req: any, res: any, next: any) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};

@@ -1,11 +1,10 @@
-import { Match } from './model';
 import { DeepPartial, EntityManager } from 'typeorm';
 import { deleteMatchByUserId, saveMatch } from './repo';
 
 export const createMatch = async (
   data: { user1Id: string; user2Id: string },
   manager: EntityManager,
-): Promise<Match> => {
+) => {
   return saveMatch(
     {
       user1: { id: data.user1Id } as DeepPartial<any>,

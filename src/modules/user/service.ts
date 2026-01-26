@@ -23,6 +23,7 @@ import {
   findActiveUsersById,
 } from './repo';
 import {
+  CompareFacesCommand,
   CreateFaceLivenessSessionCommand,
   GetFaceLivenessSessionResultsCommand,
 } from '@aws-sdk/client-rekognition';
@@ -475,4 +476,48 @@ export const getLivenessSession = async (userId: string, sessionId: string) => {
       response: response,
     },
   };
+};
+
+export const verifyUser = async (
+  userId: string,
+  file: Express.Multer.File | undefined,
+
+  languageCode: string,
+) => {
+  if (!file)
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(
+        USER_ERROR_MESSAGES.NO_VERIFICATION_IMAGE_UPLOADED,
+        languageCode,
+      ),
+    );
+
+  const verificationImageBuffer = file.buffer;
+
+  const profilePicture = await UserPhotoService.getProfilePictureByUserId(userId);
+
+  if (!profilePicture) throw new Error('User profile picture not found');
+
+  const sourceImageKey = profilePicture.s3Key;
+
+  const sourceImageBuffer = await RekognitionUtil.s3ObjectToBuffer(sourceImageKey);
+
+  const command = new CompareFacesCommand({
+    SourceImage: { Bytes: sourceImageBuffer },
+    TargetImage: { Bytes: verificationImageBuffer },
+    SimilarityThreshold: 60,
+  });
+
+  const response = await rekognitionClient.send(command);
+
+  if (response.FaceMatches && response.FaceMatches.length > 0) {
+    return {
+      message: 'User verified successfully',
+      similarity: response.FaceMatches[0].Similarity,
+    };
+  } else {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_VERIFICATION_FAILED, languageCode),
+    );
+  }
 };

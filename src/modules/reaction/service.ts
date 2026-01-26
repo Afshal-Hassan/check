@@ -1,10 +1,17 @@
 import { ReactionType } from './enums';
+import { BadRequestException } from '@/exceptions';
+import * as MessageUtil from '@/utils/message.util';
+import { REACTION_ERROR_MESSAGES } from './message';
 import { AppDataSource } from '@/config/data-source';
 import { DeepPartial, EntityManager } from 'typeorm';
 import * as MatchService from '@/modules/match/service';
-import { findReverseLike, saveOrUpdateReaction } from './repo';
+import { findDislike, findLike, findReverseLike, saveOrUpdateReaction } from './repo';
 
-export const saveLike = async (reactionGiverId: string, reactionReceiverId: string) => {
+export const saveLike = async (
+  reactionGiverId: string,
+  reactionReceiverId: string,
+  languageCode: string,
+) => {
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
@@ -12,6 +19,13 @@ export const saveLike = async (reactionGiverId: string, reactionReceiverId: stri
   let match = null;
 
   try {
+    const isLikeExist = await findLike(reactionGiverId, reactionReceiverId);
+
+    if (isLikeExist)
+      throw new BadRequestException(
+        MessageUtil.getLocalizedMessage(REACTION_ERROR_MESSAGES.LIKE.ALREADY_LIKED, languageCode),
+      );
+
     const like = await saveOrUpdateReaction(
       {
         reactionGiver: { id: reactionGiverId } as DeepPartial<any>,
@@ -44,9 +58,9 @@ export const saveLike = async (reactionGiverId: string, reactionReceiverId: stri
       match: match
         ? {
             id: match.id,
-            user1Id: match.user1.id,
-            user2Id: match.user2.id,
-            matchedAt: match.matchedAt,
+            user1Id: match.user1_id,
+            user2Id: match.user2_id,
+            matchedAt: match.matched_at,
           }
         : null,
     };
@@ -58,12 +72,26 @@ export const saveLike = async (reactionGiverId: string, reactionReceiverId: stri
   }
 };
 
-export const saveDislike = async (reactionGiverId: string, reactionReceiverId: string) => {
+export const saveDislike = async (
+  reactionGiverId: string,
+  reactionReceiverId: string,
+  languageCode: string,
+) => {
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
 
   try {
+    const isDislikeExist = await findDislike(reactionGiverId, reactionReceiverId);
+
+    if (isDislikeExist)
+      throw new BadRequestException(
+        MessageUtil.getLocalizedMessage(
+          REACTION_ERROR_MESSAGES.DISLIKE.ALREADY_DISLIKED,
+          languageCode,
+        ),
+      );
+
     const dislike = await saveOrUpdateReaction(
       {
         reactionGiver: { id: reactionGiverId } as DeepPartial<any>,
@@ -91,9 +119,9 @@ export const saveDislike = async (reactionGiverId: string, reactionReceiverId: s
       match: match
         ? {
             id: match.id,
-            user1Id: match.user1.id,
-            user2Id: match.user2.id,
-            matchedAt: match.matchedAt,
+            user1Id: match.user1_id,
+            user2Id: match.user2_id,
+            matchedAt: match.matched_at,
           }
         : null,
     };
