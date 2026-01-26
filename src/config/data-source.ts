@@ -14,6 +14,8 @@ import { UserProfile } from '@/modules/user-profile/model';
 import { DatingPreference } from '@/modules/dating-preference/model';
 import { LifestylePreference } from '@/modules/lifestyle-preference/model';
 import { UserPrompt } from '@/modules/user-prompt/model';
+import { Reaction } from '@/modules/reaction/model';
+import { Match } from '@/modules/match/model';
 
 const isProd = ENV.APP.ENVIRONMENT === 'production';
 
@@ -36,6 +38,8 @@ export const AppDataSource = new DataSource({
     LifestylePreference,
     DatingPreference,
     Language,
+    Reaction,
+    Match,
   ],
   synchronize: true,
   ssl: {

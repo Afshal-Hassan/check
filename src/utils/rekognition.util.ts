@@ -25,10 +25,8 @@ export const s3ObjectToBuffer = async (key: string): Promise<Buffer> => {
   }
 };
 
-export const indexFaces = async (key: string, userId: string) => {
+export const indexFaces = async (userId: string, imageBuffer: Buffer) => {
   try {
-    const imageBuffer = await s3ObjectToBuffer(key);
-
     const command = new IndexFacesCommand({
       CollectionId: ENV.AWS.REKOGNITION.COLLECTION_ID!,
       Image: {
@@ -74,9 +72,8 @@ const paginate = <T>(items: T[], page: number, pageSize: number): PaginatedResul
   };
 };
 
-export const searchUsersWithSimilarFaces = async (userId: string, s3Key: string) => {
+export const searchUsersWithSimilarFaces = async (userId: string, imageBuffer: Buffer) => {
   try {
-    const imageBuffer = await s3ObjectToBuffer(s3Key);
     const maxFaces = 10;
 
     const command = new SearchFacesByImageCommand({

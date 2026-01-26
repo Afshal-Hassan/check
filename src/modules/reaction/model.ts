@@ -11,10 +11,10 @@ import {
 } from 'typeorm';
 import { ReactionType } from './enums';
 
-@Entity('likes')
-@Unique(['liker', 'liked'])
-@Check(`"liker_user_id" <> "liked_user_id"`)
-export class Like {
+@Entity('reactions')
+@Unique(['reactionGiver', 'reactionReceiver'])
+@Check(`"reaction_giver_id" <> "reaction_receiver_id"`)
+export class Reaction {
   @PrimaryGeneratedColumn('uuid', { name: 'id' })
   id!: string;
 
@@ -27,7 +27,7 @@ export class Like {
   reactionReceiver!: User;
 
   @Column({ name: 'reaction_type', type: 'varchar', length: 32, nullable: false })
-  reactionType!: ReactionType;
+  reactionType!: ReactionType; // e.g., LIKE or DISLIKE
 
   @CreateDateColumn({ name: 'created_at', nullable: false })
   createdAt!: Date;
