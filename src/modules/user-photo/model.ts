@@ -15,4 +15,7 @@ export class UserPhoto {
 
   @Column({ name: 'is_primary', default: false })
   isPrimary!: boolean;
+
+  @Column({ name: 'audit_image', type: 'bytea', nullable: true })
+  auditImage!: Buffer;
 }

@@ -77,3 +77,51 @@ export const uploadProfilePictures = async (req: Request, res: Response) => {
     throw err;
   }
 };
+
+export const getUsersWithSimilarFaces = async (req: Request, res: Response) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const userId = (req as any).user?.userId as string;
+    const languageCode = HeaderUtil.getLanguageCode(req);
+    const result = await UserService.getUsersWithSimilarFaces(userId, languageCode, page);
+
+    res.status(200).json({
+      message: MessageUtil.getLocalizedMessage(
+        USER_SUCCESS_MESSAGES.SIMILAR_USERS_RETRIEVED,
+        languageCode,
+      ),
+      result,
+    });
+  } catch (err: any) {
+    throw err;
+  }
+};
+
+export const createLivenessSession = async (req: Request, res: Response) => {
+  try {
+    const { clientRequestToken } = req.body;
+    const result = await UserService.createLivenessSession(clientRequestToken);
+
+    res.status(200).json({
+      message: 'Liveness session created successfully',
+      result,
+    });
+  } catch (err: any) {
+    throw err;
+  }
+};
+
+export const getLivenessSession = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.userId as string;
+    const sessionId = req.params.sessionId as string;
+    const result = await UserService.getLivenessSession(userId, sessionId);
+
+    res.status(200).json({
+      message: 'Liveness session created successfully',
+      result,
+    });
+  } catch (err: any) {
+    throw err;
+  }
+};

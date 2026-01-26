@@ -17,6 +17,12 @@ export const USER_SUCCESS_MESSAGES = {
     es: 'Los detalles del usuario se recuperaron con éxito.',
     ar: 'تم استرجاع تفاصيل المستخدم بنجاح',
   },
+  SIMILAR_USERS_RETRIEVED: {
+    en: 'Users with similar faces retrieved successfully.',
+    fr: 'Les utilisateurs ayant des visages similaires ont été récupérés avec succès.',
+    es: 'Los usuarios con rostros similares se recuperaron con éxito.',
+    ar: 'تم استرجاع المستخدمين ذوي الوجوه المتشابهة بنجاح',
+  },
 };
 
 export const USER_ERROR_MESSAGES = {

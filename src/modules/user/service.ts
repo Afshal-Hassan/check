@@ -1,7 +1,7 @@
 import { User } from './model';
 import { OnboardingDTO } from './dto';
-import { Role } from '@/modules/auth/enums';
 import { USER_ERROR_MESSAGES } from './message';
+import { generateRequestToken, toBase64 } from '@/constants';
 import { BadRequestException } from '@/exceptions';
 import * as MessageUtil from '@/utils/message.util';
 import { DeepPartial, EntityManager } from 'typeorm';
@@ -22,8 +22,17 @@ import {
   findActiveUserById,
   findActiveUsersById,
 } from './repo';
+import {
+  CreateFaceLivenessSessionCommand,
+  GetFaceLivenessSessionResultsCommand,
+} from '@aws-sdk/client-rekognition';
+import { rekognitionClient } from '@/config/aws-rekognition.config';
 
-export const getUsersWithSimilarFaces = async (userId: string, languageCode: string) => {
+export const getUsersWithSimilarFaces = async (
+  userId: string,
+  languageCode: string,
+  page: number,
+) => {
   const user = await getUserAndProfilePictureById(userId);
 
   if (!user || !user.hasProfilePicture)
@@ -36,7 +45,10 @@ export const getUsersWithSimilarFaces = async (userId: string, languageCode: str
     user.profilePicture?.s3Key,
   );
 
-  const similarUsers = await findActiveUsersById(users.map((u) => u.userId!));
+  const similarUsers = await findActiveUsersById(
+    users.map((u) => u.userId!),
+    page,
+  );
 
   return similarUsers.map((user) => ({
     id: user.userId,
@@ -193,9 +205,9 @@ export const getUserAndProfilePictureById = async (userId: string) => {
     profilePicture: result.photo_id
       ? {
           id: result.photo_id,
-          userId: result.photo_user_id,
-          s3Key: result.photo_s3_key,
-          isPrimary: result.photo_is_primary,
+          userId: result.user_id,
+          s3Key: result.s3_key,
+          isPrimary: result.is_primary,
         }
       : null,
   };
@@ -422,4 +434,47 @@ export const uploadProfilePictures = async (
   });
 
   return UserPhotoService.savePhotos(photos);
+};
+
+export const createLivenessSession = async (clientRequestToken?: string) => {
+  const command = new CreateFaceLivenessSessionCommand({
+    ClientRequestToken: clientRequestToken || generateRequestToken(),
+  });
+
+  const response = await rekognitionClient.send(command);
+
+  return {
+    sessionId: response.SessionId,
+  };
+};
+
+export const getLivenessSession = async (userId: string, sessionId: string) => {
+  if (!sessionId) {
+    throw new BadRequestException('Session ID is required');
+  }
+
+  const command = new GetFaceLivenessSessionResultsCommand({
+    SessionId: sessionId,
+  });
+
+  const response = await rekognitionClient.send(command);
+
+  const firstAuditImage = response.AuditImages?.[0];
+
+  if (firstAuditImage?.Bytes) {
+    const auditImageBuffer = Buffer.from(firstAuditImage.Bytes);
+    await UserPhotoService.updateVerificationImageByUserId(userId, auditImageBuffer);
+  }
+
+  return {
+    success: true,
+    result: {
+      sessionId: response.SessionId,
+      status: response.Status,
+      confidence: response.Confidence,
+      isLive: response.Status === 'SUCCEEDED',
+      auditImage: firstAuditImage?.Bytes,
+      response: response,
+    },
+  };
 };

@@ -147,7 +147,14 @@ export const findActiveUserById = async (userId: string) => {
   return qb.getRawOne();
 };
 
-export const findActiveUsersById = async (userIds: string[]) => {
+export const findActiveUsersById = async (userIds: string[], page: number) => {
+  console.log(userIds);
+  if (!userIds || userIds.length === 0) {
+    return [];
+  }
+
+  const offset = (page - 1) * 10;
+
   const qb = AppDataSource.createQueryBuilder(User, 'u')
     /* ===================== JOINS ===================== */
 
@@ -281,6 +288,11 @@ export const findActiveUsersById = async (userIds: string[]) => {
       dp.id
     `,
     )
+    /* ===================== PAGINATION ===================== */
+
+    .orderBy('array_position(:userIds::uuid[], u.id)')
+    .limit(10)
+    .offset(offset)
 
     /* ===================== PARAMS ===================== */
 

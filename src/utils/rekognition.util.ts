@@ -46,6 +46,34 @@ export const indexFaces = async (key: string, userId: string) => {
   }
 };
 
+export interface PaginatedResult<T> {
+  data: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+/* -----------------------------------------------------
+ * Pagination helper
+ * --------------------------------------------------- */
+
+const paginate = <T>(items: T[], page: number, pageSize: number): PaginatedResult<T> => {
+  const safePage = Math.max(page, 1);
+  const safePageSize = Math.max(pageSize, 1);
+
+  const start = (safePage - 1) * safePageSize;
+  const end = start + safePageSize;
+
+  return {
+    data: items.slice(start, end),
+    page: safePage,
+    pageSize: safePageSize,
+    total: items.length,
+    totalPages: Math.ceil(items.length / safePageSize),
+  };
+};
+
 export const searchUsersWithSimilarFaces = async (userId: string, s3Key: string) => {
   try {
     const imageBuffer = await s3ObjectToBuffer(s3Key);
@@ -65,8 +93,8 @@ export const searchUsersWithSimilarFaces = async (userId: string, s3Key: string)
     // Results are already sorted by similarity in descending order by AWS Rekognition
     return (
       response.FaceMatches?.filter(
-        (match) => match.Face?.ExternalImageId && match.Face.ExternalImageId !== userId,
-      )?.map((match) => ({
+        (match: any) => match.Face?.ExternalImageId && match.Face.ExternalImageId !== userId,
+      )?.map((match: any) => ({
         userId: match.Face?.ExternalImageId,
         faceId: match.Face?.FaceId,
         similarity: match.Similarity,
