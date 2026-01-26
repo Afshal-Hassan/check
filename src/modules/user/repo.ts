@@ -308,13 +308,26 @@ export const findUserAndProfilePictureById = async (userId: string) => {
     .leftJoin('user_photos', 'photo', 'photo.user_id = user.id AND photo.is_primary = :isPrimary', {
       isPrimary: true,
     })
-    .addSelect([
-      'photo.id',
-      'photo.user_id',
-      'photo.s3_key',
-      'photo.is_primary',
-      'photo.audit_image',
-    ])
+    .addSelect(['photo.id', 'photo.user_id', 'photo.s3_key', 'photo.is_primary'])
+    .where('user.id = :userId', { userId })
+    .getRawOne();
+
+  return result;
+};
+
+export const findUserAndVerifiedPictureById = async (userId: string) => {
+  const result = await AppDataSource.getRepository(User)
+    .createQueryBuilder('user')
+    .select(['user.id'])
+    .leftJoin(
+      'user_photos',
+      'photo',
+      'photo.user_id = user.id AND photo.is_verified = :isVerified',
+      {
+        isVerified: true,
+      },
+    )
+    .addSelect(['photo.id', 'photo.user_id', 'photo.s3_key', 'photo.is_verified'])
     .where('user.id = :userId', { userId })
     .getRawOne();
 

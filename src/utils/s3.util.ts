@@ -4,7 +4,9 @@ import {
   DeleteObjectCommand,
   ListObjectsV2Command,
   DeleteObjectsCommand,
+  PutObjectCommand,
 } from '@aws-sdk/client-s3';
+import { randomUUID } from 'crypto';
 
 export class S3Util {
   private static s3Client = s3;
@@ -92,5 +94,20 @@ export class S3Util {
       console.error('Error deleting multiple files:', error);
       throw error;
     }
+  }
+
+  static async uploadFile(folder: string, buffer: Buffer, mimeType: string): Promise<string> {
+    const key = `${folder}/${randomUUID()}`;
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType,
+    });
+
+    await this.s3Client.send(command);
+
+    return key;
   }
 }
