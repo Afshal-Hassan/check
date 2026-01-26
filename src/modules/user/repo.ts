@@ -308,7 +308,13 @@ export const findUserAndProfilePictureById = async (userId: string) => {
     .leftJoin('user_photos', 'photo', 'photo.user_id = user.id AND photo.is_primary = :isPrimary', {
       isPrimary: true,
     })
-    .addSelect(['photo.id', 'photo.user_id', 'photo.s3_key', 'photo.is_primary'])
+    .addSelect([
+      'photo.id',
+      'photo.user_id',
+      'photo.s3_key',
+      'photo.is_primary',
+      'photo.audit_image',
+    ])
     .where('user.id = :userId', { userId })
     .getRawOne();
 

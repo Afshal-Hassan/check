@@ -42,7 +42,7 @@ export const getUsersWithSimilarFaces = async (
 
   const users = await RekognitionUtil.searchUsersWithSimilarFaces(
     userId,
-    user.profilePicture?.s3Key,
+    user.profilePicture?.auditImage,
   );
 
   const similarUsers = await findActiveUsersById(
@@ -208,6 +208,7 @@ export const getUserAndProfilePictureById = async (userId: string) => {
           userId: result.user_id,
           s3Key: result.s3_key,
           isPrimary: result.is_primary,
+          auditImage: result.audit_image,
         }
       : null,
   };
@@ -420,11 +421,6 @@ export const uploadProfilePictures = async (
     isPrimary: true,
   });
 
-  console.log('profilePicture key:', profilePicture[0].key);
-  console.log('userId:', userId);
-
-  await RekognitionUtil.indexFaces(profilePicture[0].key, userId);
-
   images.forEach((image) => {
     photos.push({
       user: { id: userId } as DeepPartial<any>,
@@ -464,6 +460,8 @@ export const getLivenessSession = async (userId: string, sessionId: string) => {
   if (firstAuditImage?.Bytes) {
     const auditImageBuffer = Buffer.from(firstAuditImage.Bytes);
     await UserPhotoService.updateVerificationImageByUserId(userId, auditImageBuffer);
+
+    await RekognitionUtil.indexFaces(userId, auditImageBuffer);
   }
 
   return {
