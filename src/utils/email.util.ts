@@ -1,13 +1,14 @@
 import { OtpAction } from '@/constants';
 import { transporter } from '@/config/email.config';
+import { ENV } from '@/config/env.config';
 
 const APP_NAME = 'Look A Like';
 
 export const sendOtpEmail = async (email: string, action: OtpAction, otp: string) => {
   console.log(`Sending OTP ${otp} to email: ${email}`);
 
-  const signupExpirySeconds = Number(process.env.SIGNUP_OTP_EXPIRY_SECONDS);
-  const forgotExpirySeconds = Number(process.env.FORGOT_PASSWORD_OTP_EXPIRY_SECONDS);
+  const signupExpirySeconds = ENV.OTP.SIGNUP_EXPIRY_SECONDS;
+  const forgotExpirySeconds = ENV.OTP.FORGOT_PASSWORD_EXPIRY_SECONDS;
 
   const expirySeconds =
     action === OtpAction.ForgotPassword ? forgotExpirySeconds : signupExpirySeconds;
@@ -20,7 +21,7 @@ export const sendOtpEmail = async (email: string, action: OtpAction, otp: string
       : `${APP_NAME} – Verify Your Email`;
 
   const mailOptions = {
-    from: `${APP_NAME} <${process.env.SMTP_EMAIL_USER}>`,
+    from: `${APP_NAME} <${ENV.SMTP.USER}>`,
     to: email,
     subject,
     html: `

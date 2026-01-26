@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import path from 'path';
+import { ENV } from './env.config';
 import { DataSource } from 'typeorm';
 import { Role } from '@/modules/role/model';
 import { User } from '@/modules/user/model';
@@ -14,16 +15,16 @@ import { DatingPreference } from '@/modules/dating-preference/model';
 import { LifestylePreference } from '@/modules/lifestyle-preference/model';
 import { UserPrompt } from '@/modules/user-prompt/model';
 
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = ENV.APP.ENVIRONMENT === 'production';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  // url: process.env.DATABASE_URL,
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
+  // url: ENV.DATABASE.URL,
+  host: ENV.DATABASE.HOST,
+  port: ENV.DATABASE.PORT,
+  username: ENV.DATABASE.USERNAME,
+  password: ENV.DATABASE.PASSWORD,
+  database: ENV.DATABASE.NAME,
   entities: [
     Role,
     User,

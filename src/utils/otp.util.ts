@@ -2,6 +2,7 @@ import { OtpAction } from '@/constants';
 import redisClient from '@/config/redis.config';
 import * as MessageUtil from '@/utils/message.util';
 import { BadRequestException } from '@/exceptions';
+import { ENV } from '@/config/env.config';
 
 interface StoreOtpParams {
   email: string;
@@ -32,8 +33,8 @@ export const storeOtpInRedis = async ({ email, action, otp }: StoreOtpParams): P
   const otpKey = `otp:${email}:${action}`;
   const expiry =
     action === OtpAction.Signup
-      ? Number(process.env.SIGNUP_OTP_EXPIRY_SECONDS)
-      : Number(process.env.FORGOT_PASSWORD_OTP_EXPIRY_SECONDS);
+      ? ENV.OTP.SIGNUP_EXPIRY_SECONDS
+      : ENV.OTP.FORGOT_PASSWORD_EXPIRY_SECONDS;
 
   return redisClient.setEx(otpKey, expiry, otp);
 };

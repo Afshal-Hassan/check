@@ -24,3 +24,15 @@ export const findProfilePictureByUserId = async (userId: string): Promise<UserPh
     },
   });
 };
+
+export const updateAuditImageByUserId = async (
+  userId: string,
+  auditImage: Buffer,
+): Promise<void> => {
+  await UserPhotoRepository.update(
+    { user: { id: userId } },
+    {
+      auditImage: auditImage,
+    },
+  );
+};

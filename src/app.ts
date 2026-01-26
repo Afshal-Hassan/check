@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import { ENV } from '@/config/env.config';
 import otpRoutes from '@/modules/otp/route';
 import userRoutes from '@/modules/user/route';
 import authRoutes from '@/modules/auth/route';
@@ -19,7 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 
 /* *****   Health Check   ***** */
 app.get('/health', (_, res) => {
-  res.status(200).json({ status: 'ok', environment: process.env.NODE_ENV || 'development' });
+  res.status(200).json({ status: 'ok', environment: ENV.APP.ENVIRONMENT || 'development' });
 });
 
 /* *****   Authentication & Authorization   ***** */

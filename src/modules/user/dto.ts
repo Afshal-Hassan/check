@@ -12,6 +12,7 @@ import {
   IsDefined,
   ArrayNotEmpty,
   MinLength,
+  IsOptional,
 } from 'class-validator';
 
 class LocationDTO {
@@ -66,4 +67,12 @@ export class OnboardingDTO {
   @IsNotEmpty({ each: true, message: 'Each interest is required' })
   @Transform(({ value }) => value?.map((v: any) => v?.trim()?.toLowerCase()))
   interests!: string[];
+}
+
+export class CreateLivenessSessionDto {
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => value?.trim())
+  @MaxLength(64, { message: 'clientRequestToken must not exceed 64 characters' })
+  clientRequestToken?: string;
 }

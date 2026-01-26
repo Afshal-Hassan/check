@@ -5,10 +5,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import app from '@/app';
+import { ENV } from '@/config/env.config';
 import { AppDataSource } from '@/config/data-source';
 import { connectRedis } from '@/config/redis.config';
 
-const PORT = process.env.PORT || 3000;
+const PORT = ENV.APP.PORT || 3000;
 
 AppDataSource.initialize()
   .then(async () => {

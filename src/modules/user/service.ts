@@ -1,9 +1,12 @@
 import { User } from './model';
 import { OnboardingDTO } from './dto';
-import { DeepPartial, EntityManager } from 'typeorm';
 import { USER_ERROR_MESSAGES } from './message';
+import { generateRequestToken, toBase64 } from '@/constants';
+import { BadRequestException } from '@/exceptions';
 import * as MessageUtil from '@/utils/message.util';
+import { DeepPartial, EntityManager } from 'typeorm';
 import { AppDataSource } from '@/config/data-source';
+import * as RekognitionUtil from '@/utils/rekognition.util';
 import * as InterestService from '@/modules/interest/service';
 import * as UserPhotoService from '@/modules/user-photo/service';
 import * as UserProfileService from '@/modules/user-profile/service';
@@ -14,15 +17,106 @@ import {
   updateLocationById,
   updatePasswordByEmail,
   findActiveUserByEmailAndRole,
-  findUserAndProfileById,
   findUsers,
   findUserAndProfilePictureById,
+  findActiveUserById,
+  findActiveUsersById,
 } from './repo';
-import { BadRequestException } from '@/exceptions';
-import { Role } from '@/modules/auth/enums';
+import {
+  CreateFaceLivenessSessionCommand,
+  GetFaceLivenessSessionResultsCommand,
+} from '@aws-sdk/client-rekognition';
+import { rekognitionClient } from '@/config/aws-rekognition.config';
 
-export const getUserDetailsByEmail = async (email: string, languageCode: string) => {
-  const result = await findActiveUserByEmailAndRole(email, Role.User);
+export const getUsersWithSimilarFaces = async (
+  userId: string,
+  languageCode: string,
+  page: number,
+) => {
+  const user = await getUserAndProfilePictureById(userId);
+
+  if (!user || !user.hasProfilePicture)
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
+    );
+
+  const users = await RekognitionUtil.searchUsersWithSimilarFaces(
+    userId,
+    user.profilePicture?.s3Key,
+  );
+
+  const similarUsers = await findActiveUsersById(
+    users.map((u) => u.userId!),
+    page,
+  );
+
+  return similarUsers.map((user) => ({
+    id: user.userId,
+    email: user.email,
+    fullName: user.fullName,
+    country: user.country,
+    state: user.state,
+    city: user.city,
+    authType: user.authType,
+    isVerified: user.isVerified,
+    isSuspended: user.isSuspended,
+
+    profile:
+      user.bioEn === null
+        ? null
+        : {
+            bioEn: user.bioEn,
+            bioFr: user.bioFr,
+            bioEs: user.bioEs,
+            bioAr: user.bioAr,
+            dateOfBirth: user.dateOfBirth,
+            occupation: user.occupation,
+            gender: user.gender,
+          },
+
+    personalDetail:
+      user.heightEn === null
+        ? null
+        : {
+            heightEn: user.heightEn,
+            heightFr: user.heightFr,
+            heightEs: user.heightEs,
+            heightAr: user.heightAr,
+            bodyType: user.bodyType,
+            relationshipStatus: user.relationshipStatus,
+            childrenPreference: user.childrenPreference,
+          },
+
+    interests: user.interests?.length ? user.interests : null,
+
+    lifestylePreference:
+      user.smoking === null
+        ? null
+        : {
+            smoking: user.smoking,
+            politicalViews: user.politicalViews,
+            diet: user.diet,
+            workoutRoutine: user.workoutRoutine,
+          },
+
+    datingPreference:
+      user.minAge === null
+        ? null
+        : {
+            minAge: user.minAge,
+            maxAge: user.maxAge,
+            interestedIn: user.interestedIn,
+            lookingFor: user.lookingFor,
+          },
+
+    prompts: user.prompts?.length ? user.prompts : null,
+
+    photos: user.photos?.length ? user.photos : null,
+  }));
+};
+
+export const getUserDetailsById = async (userId: string, languageCode: string) => {
+  const result = await findActiveUserById(userId);
 
   if (!result)
     throw new BadRequestException(
@@ -108,25 +202,14 @@ export const getUserAndProfilePictureById = async (userId: string) => {
   return {
     id: result.user_id,
     hasProfilePicture: !!result.photo_id,
-    photo: result.photo_id
+    profilePicture: result.photo_id
       ? {
           id: result.photo_id,
-          userId: result.photo_user_id,
-          s3Key: result.photo_s3_key,
-          isPrimary: result.photo_is_primary,
+          userId: result.user_id,
+          s3Key: result.s3_key,
+          isPrimary: result.is_primary,
         }
       : null,
-  };
-};
-
-export const getUserAndProfileByUserId = async (userId: string) => {
-  const result = await findUserAndProfileById(userId);
-
-  if (!result) return null;
-
-  return {
-    id: result.user_id,
-    hasProfile: !!result.profile_id,
   };
 };
 
@@ -337,6 +420,11 @@ export const uploadProfilePictures = async (
     isPrimary: true,
   });
 
+  console.log('profilePicture key:', profilePicture[0].key);
+  console.log('userId:', userId);
+
+  await RekognitionUtil.indexFaces(profilePicture[0].key, userId);
+
   images.forEach((image) => {
     photos.push({
       user: { id: userId } as DeepPartial<any>,
@@ -346,4 +434,47 @@ export const uploadProfilePictures = async (
   });
 
   return UserPhotoService.savePhotos(photos);
+};
+
+export const createLivenessSession = async (clientRequestToken?: string) => {
+  const command = new CreateFaceLivenessSessionCommand({
+    ClientRequestToken: clientRequestToken || generateRequestToken(),
+  });
+
+  const response = await rekognitionClient.send(command);
+
+  return {
+    sessionId: response.SessionId,
+  };
+};
+
+export const getLivenessSession = async (userId: string, sessionId: string) => {
+  if (!sessionId) {
+    throw new BadRequestException('Session ID is required');
+  }
+
+  const command = new GetFaceLivenessSessionResultsCommand({
+    SessionId: sessionId,
+  });
+
+  const response = await rekognitionClient.send(command);
+
+  const firstAuditImage = response.AuditImages?.[0];
+
+  if (firstAuditImage?.Bytes) {
+    const auditImageBuffer = Buffer.from(firstAuditImage.Bytes);
+    await UserPhotoService.updateVerificationImageByUserId(userId, auditImageBuffer);
+  }
+
+  return {
+    success: true,
+    result: {
+      sessionId: response.SessionId,
+      status: response.Status,
+      confidence: response.Confidence,
+      isLive: response.Status === 'SUCCEEDED',
+      auditImage: firstAuditImage?.Bytes,
+      response: response,
+    },
+  };
 };
