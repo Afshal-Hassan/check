@@ -25,8 +25,10 @@ export const s3ObjectToBuffer = async (key: string): Promise<Buffer> => {
   }
 };
 
-export const indexFaces = async (userId: string, imageBuffer: Buffer) => {
+export const indexFaces = async (userId: string, key: string) => {
   try {
+    const imageBuffer = await s3ObjectToBuffer(key);
+
     const command = new IndexFacesCommand({
       CollectionId: ENV.AWS.REKOGNITION.COLLECTION_ID!,
       Image: {

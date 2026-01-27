@@ -481,7 +481,7 @@ export const getLivenessSession = async (userId: string, sessionId: string) => {
     const auditImageBuffer = Buffer.from(firstAuditImage.Bytes);
     // await UserPhotoService.updateVerificationImageByUserId(userId, auditImageBuffer);
 
-    await RekognitionUtil.indexFaces(userId, auditImageBuffer);
+    // await RekognitionUtil.indexFaces(userId, auditImageBuffer);
   }
 
   return {
@@ -537,10 +537,12 @@ export const verifyUser = async (
 
   if (response.FaceMatches && response.FaceMatches.length > 0) {
     const key = await S3Util.uploadFile(
-      `users/${userId}/images`,
+      `users/${userId}/verification`,
       verificationImageBuffer,
       file.mimetype,
     );
+
+    await RekognitionUtil.indexFaces(userId, key);
 
     await UserPhotoService.saveVerifiedPicture({
       user: { id: userId } as DeepPartial<any>,

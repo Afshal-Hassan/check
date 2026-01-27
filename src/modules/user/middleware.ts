@@ -16,7 +16,7 @@ export const deleteOldFilesFromS3 = async (req: any, _: any, next: any) => {
       MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
     );
 
-  if (user.hasProfilePicture) await S3Util.deleteFolder(`users/${userId}/`);
+  if (user.hasProfilePicture) await S3Util.deleteFolder(`users/${userId}/images`);
 
   next();
 };
