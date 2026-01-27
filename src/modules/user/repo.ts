@@ -148,7 +148,6 @@ export const findActiveUserById = async (userId: string) => {
 };
 
 export const findActiveUsersById = async (userIds: string[], page: number) => {
-  console.log(userIds);
   if (!userIds || userIds.length === 0) {
     return [];
   }
