@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 import multerS3 from 'multer-s3';
+import { ENV } from './env.config';
 import { s3 } from './aws-s3.config';
 import multer, { FileFilterCallback } from 'multer';
 import { BadRequestException } from '@/exceptions/bad-request.exception';
-import { ENV } from './env.config';
 
 const ALLOWED_IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
 
@@ -28,7 +28,7 @@ export const upload = multer({
   },
 
   limits: {
-    // fileSize: 5 * 1024 * 1024 /* ***** 5 MB ***** */,
+    fileSize: 5 * 1024 * 1024 /* ***** 5 MB ***** */,
     files: 10,
   },
 });
