@@ -72,8 +72,9 @@ const paginate = <T>(items: T[], page: number, pageSize: number): PaginatedResul
   };
 };
 
-export const searchUsersWithSimilarFaces = async (userId: string, imageBuffer: Buffer) => {
+export const searchUsersWithSimilarFaces = async (userId: string, key: string) => {
   try {
+    const imageBuffer = await s3ObjectToBuffer(key);
     const maxFaces = 10;
 
     const command = new SearchFacesByImageCommand({

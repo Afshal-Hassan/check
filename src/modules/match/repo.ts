@@ -4,11 +4,19 @@ import { AppDataSource } from '@/config/data-source';
 
 export const MatchRepository = AppDataSource.getRepository(Match);
 
-export const saveMatch = async (
-  matchData: Partial<Match>,
-  manager: EntityManager,
-): Promise<Match> => {
-  return manager.getRepository(Match).save(matchData);
+export const saveMatch = async (matchData: Partial<Match>, manager: EntityManager) => {
+  const result = await manager
+    .getRepository(Match)
+    .createQueryBuilder()
+    .insert()
+    .into(Match)
+    .values(matchData)
+    .orIgnore()
+    .returning('*')
+    .execute()
+    .then((res) => res.raw[0]);
+
+  return result;
 };
 
 export const deleteMatchByUserId = async (

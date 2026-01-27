@@ -16,6 +16,11 @@ export const save = async (data: Partial<UserPhoto>[]): Promise<UserPhoto[]> => 
   return UserPhotoRepository.save(photos);
 };
 
+export const saveVerifiedPhoto = async (data: Partial<UserPhoto>): Promise<UserPhoto> => {
+  const photos = UserPhotoRepository.create(data);
+  return UserPhotoRepository.save(photos);
+};
+
 export const findProfilePictureByUserId = async (userId: string): Promise<UserPhoto | null> => {
   return UserPhotoRepository.findOne({
     where: {
@@ -25,14 +30,23 @@ export const findProfilePictureByUserId = async (userId: string): Promise<UserPh
   });
 };
 
-export const updateAuditImageByUserId = async (
-  userId: string,
-  auditImage: Buffer,
-): Promise<void> => {
-  await UserPhotoRepository.update(
-    { user: { id: userId } },
-    {
-      auditImage: auditImage,
+export const findVerifiedPictureByUserId = async (userId: string): Promise<UserPhoto | null> => {
+  return UserPhotoRepository.findOne({
+    where: {
+      user: { id: userId },
+      isVerified: true,
     },
-  );
+  });
 };
+
+// export const updateAuditImageByUserId = async (
+//   userId: string,
+//   auditImage: Buffer,
+// ): Promise<void> => {
+//   await UserPhotoRepository.update(
+//     { user: { id: userId } },
+//     {
+//       auditImage: auditImage,
+//     },
+//   );
+// };

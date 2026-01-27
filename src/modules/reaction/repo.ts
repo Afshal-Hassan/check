@@ -29,9 +29,35 @@ export const findReverseLike = async (
 ): Promise<Reaction | null> => {
   return manager.getRepository(Reaction).findOne({
     where: {
+      reactionGiver: { id: reactionReceiverId },
+      reactionReceiver: { id: reactionGiverId },
+      reactionType: ReactionType.LIKE,
+    },
+  });
+};
+
+export const findLike = async (
+  reactionGiverId: string,
+  reactionReceiverId: string,
+): Promise<Reaction | null> => {
+  return ReactionRepository.findOne({
+    where: {
       reactionGiver: { id: reactionGiverId },
       reactionReceiver: { id: reactionReceiverId },
       reactionType: ReactionType.LIKE,
+    },
+  });
+};
+
+export const findDislike = async (
+  reactionGiverId: string,
+  reactionReceiverId: string,
+): Promise<Reaction | null> => {
+  return ReactionRepository.findOne({
+    where: {
+      reactionGiver: { id: reactionGiverId },
+      reactionReceiver: { id: reactionReceiverId },
+      reactionType: ReactionType.DISLIKE,
     },
   });
 };

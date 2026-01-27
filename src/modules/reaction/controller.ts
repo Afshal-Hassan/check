@@ -8,7 +8,7 @@ export const saveLike = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await LikeService.saveLike(userId, req.body.reactionReceiverId);
+    const result = await LikeService.saveLike(userId, req.body.reactionReceiverId, languageCode);
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(REACTION_SUCCESS_MESSAGES.LIKE.SAVE, languageCode),
@@ -23,7 +23,7 @@ export const saveDislike = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
     const languageCode = HeaderUtil.getLanguageCode(req);
-    await LikeService.saveDislike(userId, req.body.reactionReceiverId);
+    await LikeService.saveDislike(userId, req.body.reactionReceiverId, languageCode);
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(

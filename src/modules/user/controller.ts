@@ -1,8 +1,9 @@
 import * as UserService from './service';
 import { Request, Response } from 'express';
-import { USER_SUCCESS_MESSAGES } from './message';
+import { USER_ERROR_MESSAGES, USER_SUCCESS_MESSAGES } from './message';
 import * as HeaderUtil from '@/utils/header.util';
 import * as MessageUtil from '@/utils/message.util';
+import { BadRequestException } from '@/exceptions';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -99,6 +100,9 @@ export const getUsersWithSimilarFaces = async (req: Request, res: Response) => {
 
 export const createLivenessSession = async (req: Request, res: Response) => {
   try {
+    console.log('Creating session calling...');
+    console.log('Request body:', req.body);
+
     const { clientRequestToken } = req.body;
     const result = await UserService.createLivenessSession(clientRequestToken);
 
@@ -122,6 +126,30 @@ export const getLivenessSession = async (req: Request, res: Response) => {
       result,
     });
   } catch (err: any) {
+    throw err;
+  }
+};
+
+export const verifyUser = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+  const languageCode = HeaderUtil.getLanguageCode(req);
+  const file = req.file as Express.Multer.File | undefined;
+
+  try {
+    const result = await UserService.verifyUser(userId as string, file, languageCode);
+
+    res.status(200).json({
+      message: MessageUtil.getLocalizedMessage(USER_SUCCESS_MESSAGES.IMAGES_UPLOADED, languageCode),
+      result,
+    });
+  } catch (err: any) {
+    if (err.name === 'InvalidParameterException') {
+      throw new BadRequestException(
+        MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.IMAGE_PROCESSING_FAILED, languageCode),
+      );
+    }
+
+    console.error('Error in verification:', err);
     throw err;
   }
 };

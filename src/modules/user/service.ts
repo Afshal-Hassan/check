@@ -1,6 +1,6 @@
 import { User } from './model';
 import { OnboardingDTO } from './dto';
-import { USER_ERROR_MESSAGES } from './message';
+import { USER_ERROR_MESSAGES, USER_SUCCESS_MESSAGES } from './message';
 import { generateRequestToken, toBase64 } from '@/constants';
 import { BadRequestException } from '@/exceptions';
 import * as MessageUtil from '@/utils/message.util';
@@ -21,28 +21,31 @@ import {
   findUserAndProfilePictureById,
   findActiveUserById,
   findActiveUsersById,
+  findUserAndVerifiedPictureById,
 } from './repo';
 import {
+  CompareFacesCommand,
   CreateFaceLivenessSessionCommand,
   GetFaceLivenessSessionResultsCommand,
 } from '@aws-sdk/client-rekognition';
 import { rekognitionClient } from '@/config/aws-rekognition.config';
+import { S3Util } from '@/utils/s3.util';
 
 export const getUsersWithSimilarFaces = async (
   userId: string,
   languageCode: string,
   page: number,
 ) => {
-  const user = await getUserAndProfilePictureById(userId);
+  const user = await getUserAndVerifiedPictureById(userId);
 
-  if (!user || !user.hasProfilePicture)
+  if (!user || !user.hasVerifiedPicture)
     throw new BadRequestException(
       MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
     );
 
   const users = await RekognitionUtil.searchUsersWithSimilarFaces(
     userId,
-    user.profilePicture?.auditImage,
+    user.verifiedPicture?.s3Key,
   );
 
   const similarUsers = await findActiveUsersById(
@@ -208,7 +211,25 @@ export const getUserAndProfilePictureById = async (userId: string) => {
           userId: result.user_id,
           s3Key: result.s3_key,
           isPrimary: result.is_primary,
-          auditImage: result.audit_image,
+        }
+      : null,
+  };
+};
+
+export const getUserAndVerifiedPictureById = async (userId: string) => {
+  const result = await findUserAndVerifiedPictureById(userId);
+
+  if (!result) return null;
+
+  return {
+    id: result.user_id,
+    hasVerifiedPicture: !!result.photo_id,
+    verifiedPicture: result.photo_id
+      ? {
+          id: result.photo_id,
+          userId: result.user_id,
+          s3Key: result.s3_key,
+          isVerified: result.is_verified,
         }
       : null,
   };
@@ -412,7 +433,7 @@ export const uploadProfilePictures = async (
   const photos: {
     user: User;
     s3Key: string;
-    isPrimary: boolean;
+    isPrimary?: boolean;
   }[] = [];
 
   photos.push({
@@ -425,7 +446,6 @@ export const uploadProfilePictures = async (
     photos.push({
       user: { id: userId } as DeepPartial<any>,
       s3Key: image.key,
-      isPrimary: false,
     });
   });
 
@@ -459,7 +479,7 @@ export const getLivenessSession = async (userId: string, sessionId: string) => {
 
   if (firstAuditImage?.Bytes) {
     const auditImageBuffer = Buffer.from(firstAuditImage.Bytes);
-    await UserPhotoService.updateVerificationImageByUserId(userId, auditImageBuffer);
+    // await UserPhotoService.updateVerificationImageByUserId(userId, auditImageBuffer);
 
     await RekognitionUtil.indexFaces(userId, auditImageBuffer);
   }
@@ -475,4 +495,66 @@ export const getLivenessSession = async (userId: string, sessionId: string) => {
       response: response,
     },
   };
+};
+
+export const verifyUser = async (
+  userId: string,
+  file: Express.Multer.File | undefined,
+
+  languageCode: string,
+) => {
+  if (!file)
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(
+        USER_ERROR_MESSAGES.NO_VERIFICATION_IMAGE_UPLOADED,
+        languageCode,
+      ),
+    );
+
+  const verificationImageBuffer = file.buffer;
+
+  const verifiedPicture = await UserPhotoService.getVerifiedPictureByUserId(userId);
+
+  if (verifiedPicture) throw new BadRequestException('Verified picture is already saved.');
+
+  const profilePicture = await UserPhotoService.getProfilePictureByUserId(userId);
+
+  if (!profilePicture) throw new Error('User profile picture not found');
+
+  const sourceImageKey = profilePicture.s3Key;
+
+  const sourceImageBuffer = await RekognitionUtil.s3ObjectToBuffer(sourceImageKey);
+
+  const command = new CompareFacesCommand({
+    SourceImage: { Bytes: sourceImageBuffer },
+    TargetImage: { Bytes: verificationImageBuffer },
+    SimilarityThreshold: 60,
+  });
+
+  const response = await rekognitionClient.send(command);
+
+  console.log(response);
+
+  if (response.FaceMatches && response.FaceMatches.length > 0) {
+    const key = await S3Util.uploadFile(
+      `users/${userId}/images`,
+      verificationImageBuffer,
+      file.mimetype,
+    );
+
+    await UserPhotoService.saveVerifiedPicture({
+      user: { id: userId } as DeepPartial<any>,
+      s3Key: key,
+      isVerified: true,
+    });
+
+    return {
+      message: MessageUtil.getLocalizedMessage(USER_SUCCESS_MESSAGES.USER_VERIFIED, languageCode),
+      similarity: response.FaceMatches[0].Similarity,
+    };
+  } else {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_VERIFICATION_FAILED, languageCode),
+    );
+  }
 };
