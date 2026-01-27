@@ -23,6 +23,12 @@ export const USER_SUCCESS_MESSAGES = {
     es: 'Los usuarios con rostros similares se recuperaron con éxito.',
     ar: 'تم استرجاع المستخدمين ذوي الوجوه المتشابهة بنجاح',
   },
+  USER_VERIFIED: {
+    en: 'User verified successfully.',
+    fr: "L'utilisateur a été vérifié avec succès.",
+    es: 'El usuario fue verificado con éxito.',
+    ar: 'تم التحقق من المستخدم بنجاح',
+  },
 };
 
 export const USER_ERROR_MESSAGES = {

@@ -35,7 +35,7 @@ export const saveLike = async (
       queryRunner.manager,
     );
 
-    const isMutual = await hasMutualLike(reactionReceiverId, reactionGiverId, queryRunner.manager);
+    const isMutual = await hasMutualLike(reactionGiverId, reactionReceiverId, queryRunner.manager);
 
     if (isMutual) {
       match = await MatchService.createMatch(

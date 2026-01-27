@@ -5,6 +5,8 @@ import multer, { FileFilterCallback } from 'multer';
 import { BadRequestException } from '@/exceptions/bad-request.exception';
 import { ENV } from './env.config';
 
+const ALLOWED_IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
+
 export const upload = multer({
   storage: multerS3({
     s3,
@@ -18,10 +20,10 @@ export const upload = multer({
   }),
 
   fileFilter: (_, file: Express.Multer.File, cb: FileFilterCallback) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new BadRequestException('Only image files are allowed for S3 upload'));
+      cb(new BadRequestException('Only png, jpg, jpeg image files are allowed for S3 upload'));
     }
   },
 
@@ -35,10 +37,10 @@ export const uploadMemory = multer({
   storage: multer.memoryStorage(),
 
   fileFilter: (req, file: any, cb: FileFilterCallback) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error('Only png, jpg, jpeg image files are allowed'));
     }
   },
 

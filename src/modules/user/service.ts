@@ -1,6 +1,6 @@
 import { User } from './model';
 import { OnboardingDTO } from './dto';
-import { USER_ERROR_MESSAGES } from './message';
+import { USER_ERROR_MESSAGES, USER_SUCCESS_MESSAGES } from './message';
 import { generateRequestToken, toBase64 } from '@/constants';
 import { BadRequestException } from '@/exceptions';
 import * as MessageUtil from '@/utils/message.util';
@@ -513,6 +513,10 @@ export const verifyUser = async (
 
   const verificationImageBuffer = file.buffer;
 
+  const verifiedPicture = await UserPhotoService.getVerifiedPictureByUserId(userId);
+
+  if (verifiedPicture) throw new BadRequestException('Verified picture is already saved.');
+
   const profilePicture = await UserPhotoService.getProfilePictureByUserId(userId);
 
   if (!profilePicture) throw new Error('User profile picture not found');
@@ -529,6 +533,8 @@ export const verifyUser = async (
 
   const response = await rekognitionClient.send(command);
 
+  console.log(response);
+
   if (response.FaceMatches && response.FaceMatches.length > 0) {
     const key = await S3Util.uploadFile(
       `users/${userId}/images`,
@@ -543,7 +549,7 @@ export const verifyUser = async (
     });
 
     return {
-      message: 'User verified successfully',
+      message: MessageUtil.getLocalizedMessage(USER_SUCCESS_MESSAGES.USER_VERIFIED, languageCode),
       similarity: response.FaceMatches[0].Similarity,
     };
   } else {

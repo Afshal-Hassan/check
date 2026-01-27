@@ -30,6 +30,15 @@ export const findProfilePictureByUserId = async (userId: string): Promise<UserPh
   });
 };
 
+export const findVerifiedPictureByUserId = async (userId: string): Promise<UserPhoto | null> => {
+  return UserPhotoRepository.findOne({
+    where: {
+      user: { id: userId },
+      isVerified: true,
+    },
+  });
+};
+
 // export const updateAuditImageByUserId = async (
 //   userId: string,
 //   auditImage: Buffer,

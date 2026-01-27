@@ -29,8 +29,8 @@ export const findReverseLike = async (
 ): Promise<Reaction | null> => {
   return manager.getRepository(Reaction).findOne({
     where: {
-      reactionGiver: { id: reactionGiverId },
-      reactionReceiver: { id: reactionReceiverId },
+      reactionGiver: { id: reactionReceiverId },
+      reactionReceiver: { id: reactionGiverId },
       reactionType: ReactionType.LIKE,
     },
   });
