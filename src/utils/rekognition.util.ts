@@ -74,10 +74,48 @@ const paginate = <T>(items: T[], page: number, pageSize: number): PaginatedResul
   };
 };
 
+import { ListFacesCommand } from '@aws-sdk/client-rekognition';
+
+export const getAllUsersInCollection = async (userId: string, excludeUserIds: string[] = []) => {
+  try {
+    const allFaces: any[] = [];
+    let nextToken: string | undefined;
+
+    do {
+      const command = new ListFacesCommand({
+        CollectionId: ENV.AWS.REKOGNITION.COLLECTION_ID!,
+        MaxResults: 4096,
+        NextToken: nextToken,
+      });
+
+      const response = await rekognitionClient.send(command);
+
+      if (response.Faces) {
+        allFaces.push(...response.Faces);
+      }
+
+      nextToken = response.NextToken;
+    } while (nextToken);
+
+    const excludeSet = new Set([userId, ...excludeUserIds]);
+
+    return allFaces
+      .filter((face) => face.ExternalImageId && !excludeSet.has(face.ExternalImageId))
+      .map((face) => ({
+        userId: face.ExternalImageId,
+        faceId: face.FaceId,
+        confidence: face.Confidence,
+      }));
+  } catch (err) {
+    console.error('Error listing faces:', err);
+    throw err;
+  }
+};
+
 export const searchUsersWithSimilarFaces = async (userId: string, key: string) => {
   try {
     const imageBuffer = await s3ObjectToBuffer(key);
-    const maxFaces = 10;
+    const maxFaces = 4096;
 
     const command = new SearchFacesByImageCommand({
       CollectionId: ENV.AWS.REKOGNITION.COLLECTION_ID!,

@@ -43,79 +43,87 @@ export const getUsersWithSimilarFaces = async (
       MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
     );
 
-  const users = await RekognitionUtil.searchUsersWithSimilarFaces(
+  const similarUsers = await RekognitionUtil.searchUsersWithSimilarFaces(
     userId,
     user.verifiedPicture?.s3Key,
   );
 
-  const similarUsers = await findActiveUsersById(
-    users.map((u) => u.userId!),
-    page,
-  );
+  const similarUserIds = similarUsers.map((u) => u.userId!);
 
-  return similarUsers.map((user) => ({
-    id: user.userId,
-    email: user.email,
-    fullName: user.fullName,
-    country: user.country,
-    state: user.state,
-    city: user.city,
-    authType: user.authType,
-    isVerified: user.isVerified,
-    isSuspended: user.isSuspended,
+  const otherUsers = await RekognitionUtil.getAllUsersInCollection(userId, similarUserIds);
 
-    profile:
-      user.bioEn === null
-        ? null
-        : {
-            bioEn: user.bioEn,
-            bioFr: user.bioFr,
-            bioEs: user.bioEs,
-            bioAr: user.bioAr,
-            dateOfBirth: user.dateOfBirth,
-            occupation: user.occupation,
-            gender: user.gender,
-          },
+  const allUserIds = [...similarUserIds, ...otherUsers.map((u) => u.userId!)];
 
-    personalDetail:
-      user.heightEn === null
-        ? null
-        : {
-            heightEn: user.heightEn,
-            heightFr: user.heightFr,
-            heightEs: user.heightEs,
-            heightAr: user.heightAr,
-            bodyType: user.bodyType,
-            relationshipStatus: user.relationshipStatus,
-            childrenPreference: user.childrenPreference,
-          },
+  const users = await findActiveUsersById(allUserIds, page);
 
-    interests: user.interests?.length ? user.interests : null,
+  return users.map((user) => {
+    const similarUser = similarUsers.find((u) => u.userId === user.userId);
 
-    lifestylePreference:
-      user.smoking === null
-        ? null
-        : {
-            smoking: user.smoking,
-            politicalViews: user.politicalViews,
-            diet: user.diet,
-            workoutRoutine: user.workoutRoutine,
-          },
+    return {
+      id: user.userId,
+      email: user.email,
+      fullName: user.fullName,
+      country: user.country,
+      state: user.state,
+      city: user.city,
+      authType: user.authType,
+      isVerified: user.isVerified,
+      isSuspended: user.isSuspended,
+      matchScore: similarUser?.similarity * 100 || 0,
 
-    datingPreference:
-      user.minAge === null
-        ? null
-        : {
-            minAge: user.minAge,
-            maxAge: user.maxAge,
-            interestedIn: user.interestedIn,
-            lookingFor: user.lookingFor,
-          },
+      profile:
+        user.bioEn === null
+          ? null
+          : {
+              bioEn: user.bioEn,
+              bioFr: user.bioFr,
+              bioEs: user.bioEs,
+              bioAr: user.bioAr,
+              dateOfBirth: user.dateOfBirth,
+              occupation: user.occupation,
+              gender: user.gender,
+            },
 
-    prompts: user.prompts?.length ? user.prompts : null,
+      personalDetail:
+        user.heightEn === null
+          ? null
+          : {
+              heightEn: user.heightEn,
+              heightFr: user.heightFr,
+              heightEs: user.heightEs,
+              heightAr: user.heightAr,
+              bodyType: user.bodyType,
+              relationshipStatus: user.relationshipStatus,
+              childrenPreference: user.childrenPreference,
+            },
 
-    photos: user.photos?.length ? user.photos : null,
-  }));
+      interests: user.interests?.length ? user.interests : null,
+
+      lifestylePreference:
+        user.smoking === null
+          ? null
+          : {
+              smoking: user.smoking,
+              politicalViews: user.politicalViews,
+              diet: user.diet,
+              workoutRoutine: user.workoutRoutine,
+            },
+
+      datingPreference:
+        user.minAge === null
+          ? null
+          : {
+              minAge: user.minAge,
+              maxAge: user.maxAge,
+              interestedIn: user.interestedIn,
+              lookingFor: user.lookingFor,
+            },
+
+      prompts: user.prompts?.length ? user.prompts : null,
+
+      photos: user.photos?.length ? user.photos : null,
+    };
+  });
 };
 
 export const getUserDetailsById = async (userId: string, languageCode: string) => {
@@ -532,8 +540,6 @@ export const verifyUser = async (
   });
 
   const response = await rekognitionClient.send(command);
-
-  console.log(response);
 
   if (response.FaceMatches && response.FaceMatches.length > 0) {
     const key = await S3Util.uploadFile(
