@@ -76,7 +76,10 @@ const paginate = <T>(items: T[], page: number, pageSize: number): PaginatedResul
 
 import { ListFacesCommand } from '@aws-sdk/client-rekognition';
 
-export const getAllUsersInCollection = async (userId: string, excludeUserIds: string[] = []) => {
+export const getAllOtherRemainingUsersInCollection = async (
+  userId: string,
+  excludeUserIds: string[] = [],
+) => {
   try {
     const allFaces: any[] = [];
     let nextToken: string | undefined;

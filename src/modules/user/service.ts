@@ -50,7 +50,10 @@ export const getUsersWithSimilarFaces = async (
 
   const similarUserIds = similarUsers.map((u) => u.userId!);
 
-  const otherUsers = await RekognitionUtil.getAllUsersInCollection(userId, similarUserIds);
+  const otherUsers = await RekognitionUtil.getAllOtherRemainingUsersInCollection(
+    userId,
+    similarUserIds,
+  );
 
   const allUserIds = [...similarUserIds, ...otherUsers.map((u) => u.userId!)];
 
@@ -69,7 +72,7 @@ export const getUsersWithSimilarFaces = async (
       authType: user.authType,
       isVerified: user.isVerified,
       isSuspended: user.isSuspended,
-      matchScore: similarUser?.similarity * 100 || 0,
+      matchScore: similarUser?.similarity || 0,
 
       profile:
         user.bioEn === null
