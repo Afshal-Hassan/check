@@ -25,10 +25,8 @@ export const s3ObjectToBuffer = async (key: string): Promise<Buffer> => {
   }
 };
 
-export const indexFaces = async (userId: string, key: string) => {
+export const indexFacesFromBuffer = async (userId: string, imageBuffer: Buffer) => {
   try {
-    const imageBuffer = await s3ObjectToBuffer(key);
-
     const command = new IndexFacesCommand({
       CollectionId: ENV.AWS.REKOGNITION.COLLECTION_ID!,
       Image: {
@@ -36,12 +34,27 @@ export const indexFaces = async (userId: string, key: string) => {
       },
       ExternalImageId: userId,
       DetectionAttributes: ['DEFAULT'],
+      MaxFaces: 1,
+      QualityFilter: 'MEDIUM',
     });
 
     const response = await rekognitionClient.send(command);
+
+    if (!response.FaceRecords || response.FaceRecords.length === 0) {
+      throw new Error('No face detected in the image');
+    }
+
     return response.FaceRecords;
+  } catch (err: any) {
+    throw err;
+  }
+};
+
+export const indexFaces = async (userId: string, key: string) => {
+  try {
+    const imageBuffer = await s3ObjectToBuffer(key);
+    return indexFacesFromBuffer(userId, imageBuffer);
   } catch (err) {
-    console.error('Error indexing face:', err);
     throw err;
   }
 };
@@ -87,7 +100,7 @@ export const getAllOtherRemainingUsersInCollection = async (
     do {
       const command = new ListFacesCommand({
         CollectionId: ENV.AWS.REKOGNITION.COLLECTION_ID!,
-        MaxResults: 4096,
+        MaxResults: 100,
         NextToken: nextToken,
       });
 

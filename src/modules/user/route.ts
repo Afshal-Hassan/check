@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { CreateLivenessSessionDto, OnboardingDTO } from './dto';
+import { OnboardingDTO } from './dto';
 import { validateDTO } from '@/middleware';
 import { upload, uploadMemory } from '@/config/multer.config';
 import { deleteOldFilesFromS3 } from './middleware';
@@ -9,11 +9,8 @@ import {
   uploadProfilePictures,
   getUsers,
   getUsersWithSimilarFaces,
-  createLivenessSession,
-  getLivenessSession,
   verifyUser,
 } from './controller';
-import { asyncHandler } from '@/constants';
 
 const router = Router();
 
@@ -39,7 +36,5 @@ router.put(
 
 /* *****  VERIFICATION  ***** */
 router.post('/verify', uploadMemory.single('image'), verifyUser);
-router.post('/create-session', asyncHandler(createLivenessSession));
-router.get('/session/:sessionId', getLivenessSession);
 
 export default router;

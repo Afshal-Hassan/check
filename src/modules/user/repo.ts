@@ -5,6 +5,36 @@ import { ENV } from '@/config/env.config';
 
 export const UserRepository = AppDataSource.getRepository(User);
 
+export const findUsers = async (page = 1, isVerified?: boolean, isSuspended?: boolean) => {
+  const queryBuilder = AppDataSource.createQueryBuilder()
+    .select([
+      'u.id AS "userId"',
+      'u.email AS "email"',
+      'up.gender AS "gender"',
+      'up.occupation AS "occupation"',
+      `DATE_PART('year', AGE(up."date_of_birth")) AS "age"`,
+      `COUNT(*) OVER() AS "total_count"` /* total count over the filtered rows */,
+    ])
+    .from('users', 'u')
+    .leftJoin('user_profiles', 'up', 'up."user_id" = u.id')
+    .where('u.role_id = 2');
+
+  // Conditional queries
+  if (isVerified !== undefined) {
+    queryBuilder.andWhere('u."is_verified" = :isVerified', { isVerified });
+  }
+  if (isSuspended !== undefined) {
+    queryBuilder.andWhere('u."is_suspended" = :isSuspended', { isSuspended });
+  }
+
+  /* Pagination */
+  queryBuilder.offset((page - 1) * 10).limit(10);
+
+  const rawData = await queryBuilder.getRawMany();
+
+  return rawData;
+};
+
 export const findActiveUserById = async (userId: string) => {
   const qb = AppDataSource.createQueryBuilder(User, 'u')
     /* ===================== JOINS ===================== */
@@ -49,6 +79,7 @@ export const findActiveUserById = async (userId: string) => {
       'u.city AS "city"',
       'u.auth_type AS "authType"',
       'u.is_verified AS "isVerified"',
+      'u.is_onboarded AS "isOnboarded"',
       'u.is_suspended AS "isSuspended"',
 
       /* ---------- PROFILE ---------- */
@@ -147,6 +178,25 @@ export const findActiveUserById = async (userId: string) => {
   return qb.getRawOne();
 };
 
+export const findUserAndVerifiedPictureById = async (userId: string) => {
+  const result = await AppDataSource.getRepository(User)
+    .createQueryBuilder('user')
+    .select(['user.id'])
+    .leftJoin(
+      'user_photos',
+      'photo',
+      'photo.user_id = user.id AND photo.is_verified = :isVerified',
+      {
+        isVerified: true,
+      },
+    )
+    .addSelect(['photo.id', 'photo.user_id', 'photo.s3_key', 'photo.is_verified'])
+    .where('user.id = :userId', { userId })
+    .getRawOne();
+
+  return result;
+};
+
 export const findActiveUsersById = async (userIds: string[], page: number) => {
   if (!userIds || userIds.length === 0) {
     return [];
@@ -198,6 +248,7 @@ export const findActiveUsersById = async (userIds: string[], page: number) => {
       'u.city AS "city"',
       'u.auth_type AS "authType"',
       'u.is_verified AS "isVerified"',
+      'u.is_onboarded AS "isOnboarded"',
       'u.is_suspended AS "isSuspended"',
 
       /* ---------- PROFILE ---------- */
@@ -314,37 +365,6 @@ export const findUserAndProfilePictureById = async (userId: string) => {
   return result;
 };
 
-export const findUserAndVerifiedPictureById = async (userId: string) => {
-  const result = await AppDataSource.getRepository(User)
-    .createQueryBuilder('user')
-    .select(['user.id'])
-    .leftJoin(
-      'user_photos',
-      'photo',
-      'photo.user_id = user.id AND photo.is_verified = :isVerified',
-      {
-        isVerified: true,
-      },
-    )
-    .addSelect(['photo.id', 'photo.user_id', 'photo.s3_key', 'photo.is_verified'])
-    .where('user.id = :userId', { userId })
-    .getRawOne();
-
-  return result;
-};
-
-export const findUserAndProfileById = async (userId: string) => {
-  const result = await AppDataSource.getRepository(User)
-    .createQueryBuilder('user')
-    .select(['user.id'])
-    .leftJoin('user_profiles', 'profile', 'profile.user_id = user.id')
-    .addSelect(['profile.id'])
-    .where('user.id = :userId', { userId })
-    .getRawOne();
-
-  return result;
-};
-
 export const findUserByEmail = async (email: string): Promise<User | null> => {
   return UserRepository.findOne({ where: { email } });
 };
@@ -403,6 +423,7 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
       'u.city AS "city"',
       'u.auth_type AS "authType"',
       'u.is_verified AS "isVerified"',
+      'u.is_onboarded AS "isOnboarded"',
       'u.is_suspended AS "isSuspended"',
 
       /* ---------- PROFILE ---------- */
@@ -511,36 +532,6 @@ export const save = async (userData: Partial<User>): Promise<User> => {
   return UserRepository.save(user);
 };
 
-export const findUsers = async (page = 1, isVerified?: boolean, isSuspended?: boolean) => {
-  const queryBuilder = AppDataSource.createQueryBuilder()
-    .select([
-      'u.id AS "userId"',
-      'u.email AS "email"',
-      'up.gender AS "gender"',
-      'up.occupation AS "occupation"',
-      `DATE_PART('year', AGE(up."date_of_birth")) AS "age"`,
-      `COUNT(*) OVER() AS "total_count"` /* total count over the filtered rows */,
-    ])
-    .from('users', 'u')
-    .leftJoin('user_profiles', 'up', 'up."user_id" = u.id')
-    .where('u.role_id = 2');
-
-  // Conditional queries
-  if (isVerified !== undefined) {
-    queryBuilder.andWhere('u."is_verified" = :isVerified', { isVerified });
-  }
-  if (isSuspended !== undefined) {
-    queryBuilder.andWhere('u."is_suspended" = :isSuspended', { isSuspended });
-  }
-
-  /* Pagination */
-  queryBuilder.offset((page - 1) * 10).limit(10);
-
-  const rawData = await queryBuilder.getRawMany();
-
-  return rawData;
-};
-
 export const updatePasswordByEmail = async (
   email: string,
   hashedPassword: string,
@@ -563,4 +554,22 @@ export const updateLocationById = async (
   if (!user) throw new Error('User not found');
 
   return repo.save(user);
+};
+
+export const updateIsVerifiedById = async (
+  userId: string,
+  manager: EntityManager,
+): Promise<UpdateResult> => {
+  const repo = manager.getRepository(User);
+
+  return repo.update({ id: userId }, { isVerified: true });
+};
+
+export const updateIsOnboardedById = async (
+  userId: string,
+  manager: EntityManager,
+): Promise<UpdateResult> => {
+  const repo = manager.getRepository(User);
+
+  return repo.update({ id: userId }, { isOnboarded: true });
 };

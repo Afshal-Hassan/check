@@ -1,3 +1,4 @@
+import { EntityManager } from 'typeorm';
 import { UserPhoto } from './model';
 import { AppDataSource } from '@/config/data-source';
 
@@ -16,9 +17,14 @@ export const save = async (data: Partial<UserPhoto>[]): Promise<UserPhoto[]> => 
   return UserPhotoRepository.save(photos);
 };
 
-export const saveVerifiedPhoto = async (data: Partial<UserPhoto>): Promise<UserPhoto> => {
-  const photos = UserPhotoRepository.create(data);
-  return UserPhotoRepository.save(photos);
+export const saveVerifiedPhoto = async (
+  data: Partial<UserPhoto>,
+  manager: EntityManager,
+): Promise<UserPhoto> => {
+  const repo = manager.getRepository(UserPhoto);
+
+  const photo = repo.create(data);
+  return repo.save(photo);
 };
 
 export const findProfilePictureByUserId = async (userId: string): Promise<UserPhoto | null> => {
@@ -38,15 +44,3 @@ export const findVerifiedPictureByUserId = async (userId: string): Promise<UserP
     },
   });
 };
-
-// export const updateAuditImageByUserId = async (
-//   userId: string,
-//   auditImage: Buffer,
-// ): Promise<void> => {
-//   await UserPhotoRepository.update(
-//     { user: { id: userId } },
-//     {
-//       auditImage: auditImage,
-//     },
-//   );
-// };

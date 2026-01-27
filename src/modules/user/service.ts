@@ -1,7 +1,6 @@
 import { User } from './model';
 import { OnboardingDTO } from './dto';
-import { USER_ERROR_MESSAGES, USER_SUCCESS_MESSAGES } from './message';
-import { generateRequestToken, toBase64 } from '@/constants';
+import { USER_ERROR_MESSAGES } from './message';
 import { BadRequestException } from '@/exceptions';
 import * as MessageUtil from '@/utils/message.util';
 import { DeepPartial, EntityManager } from 'typeorm';
@@ -22,14 +21,108 @@ import {
   findActiveUserById,
   findActiveUsersById,
   findUserAndVerifiedPictureById,
+  updateIsVerifiedById,
+  updateIsOnboardedById,
 } from './repo';
-import {
-  CompareFacesCommand,
-  CreateFaceLivenessSessionCommand,
-  GetFaceLivenessSessionResultsCommand,
-} from '@aws-sdk/client-rekognition';
+import { CompareFacesCommand } from '@aws-sdk/client-rekognition';
 import { rekognitionClient } from '@/config/aws-rekognition.config';
 import { S3Util } from '@/utils/s3.util';
+
+export const getUsers = async (page: number, isVerified: boolean, isSuspended: boolean) => {
+  const result = await findUsers(page, isVerified, isSuspended);
+
+  const total = result.length > 0 ? Number(result[0].total_count) : 0;
+
+  const data = result.map((r) => ({
+    userId: r.userId,
+    email: r.email,
+    gender: r.gender,
+    occupation: r.occupation,
+    age: Number(r.age),
+  }));
+
+  return { data, total };
+};
+
+export const getUserDetailsById = async (userId: string, languageCode: string) => {
+  const result = await findActiveUserById(userId);
+
+  if (!result)
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
+    );
+
+  if (result.isSuspended)
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.ACCOUNT_SUSPENDED, languageCode),
+    );
+
+  return {
+    id: result.userId,
+    email: result.email,
+    fullName: result.fullName,
+    passwordHash: result.passwordHash,
+    country: result.country,
+    state: result.state,
+    city: result.city,
+    authType: result.authType,
+    isVerified: result.isVerified,
+    isOnboarded: result.isOnboarded,
+    isSuspended: result.isSuspended,
+
+    profile:
+      result.bioEn === null
+        ? null
+        : {
+            bioEn: result.bioEn,
+            bioFr: result.bioFr,
+            bioEs: result.bioEs,
+            bioAr: result.bioAr,
+            dateOfBirth: result.dateOfBirth,
+            occupation: result.occupation,
+            gender: result.gender,
+          },
+
+    personalDetail:
+      result.heightEn === null
+        ? null
+        : {
+            heightEn: result.heightEn,
+            heightFr: result.heightFr,
+            heightEs: result.heightEs,
+            heightAr: result.heightAr,
+            bodyType: result.bodyType,
+            relationshipStatus: result.relationshipStatus,
+            childrenPreference: result.childrenPreference,
+          },
+
+    interests: result.interests.length === 0 ? null : result.interests,
+
+    lifestylePreference:
+      result.smoking === null
+        ? null
+        : {
+            smoking: result.smoking,
+            politicalViews: result.politicalViews,
+            diet: result.diet,
+            workoutRoutine: result.workoutRoutine,
+          },
+
+    datingPreference:
+      result.minAge === null
+        ? null
+        : {
+            minAge: result.minAge,
+            maxAge: result.maxAge,
+            interestedIn: result.interestedIn,
+            lookingFor: result.lookingFor,
+          },
+
+    prompts: result.prompts.length === 0 ? null : result.prompts,
+
+    photos: result.photos.length === 0 ? null : result.photos,
+  };
+};
 
 export const getUsersWithSimilarFaces = async (
   userId: string,
@@ -71,6 +164,7 @@ export const getUsersWithSimilarFaces = async (
       city: user.city,
       authType: user.authType,
       isVerified: user.isVerified,
+      isOnboarded: user.isOnboarded,
       isSuspended: user.isSuspended,
       matchScore: similarUser?.similarity || 0,
 
@@ -129,82 +223,189 @@ export const getUsersWithSimilarFaces = async (
   });
 };
 
-export const getUserDetailsById = async (userId: string, languageCode: string) => {
-  const result = await findActiveUserById(userId);
+export const completeOnboarding = async (userId: string, data: OnboardingDTO) => {
+  const queryRunner = AppDataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
-  if (!result)
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
+  const { location, profile, interests } = data;
+
+  try {
+    const updatedUser = await updateUserLocation(userId, location, queryRunner.manager);
+
+    const savedProfile: any = await UserProfileService.saveUserProfile(
+      { userId, ...profile },
+      queryRunner.manager,
     );
 
-  if (result.isSuspended)
+    await InterestService.saveInterests({ userId, interests }, queryRunner.manager);
+
+    await queryRunner.commitTransaction();
+
+    return {
+      user: {
+        ...updatedUser,
+        passwordHash: undefined,
+      },
+      profile: {
+        id: savedProfile.id,
+        userId: savedProfile.user_id,
+
+        bioEn: savedProfile.bio_en,
+        bioFr: savedProfile.bio_fr,
+        bioAr: savedProfile.bio_ar,
+        bioEs: savedProfile.bio_es,
+
+        heightEn: savedProfile.height_en,
+        heightFr: savedProfile.height_fr,
+        heightAr: savedProfile.height_ar,
+        heightEs: savedProfile.height_es,
+
+        dateOfBirth: savedProfile.date_of_birth,
+        occupation: savedProfile.occupation,
+        gender: savedProfile.gender,
+        bodyType: savedProfile.body_type,
+        relationshipStatus: savedProfile.relationship_status,
+        childrenPreference: savedProfile.children_preference,
+      },
+    };
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
+};
+
+export const uploadProfilePictures = async (
+  userId: string,
+  files:
+    | {
+        profilePicture?: Express.MulterS3.File[];
+        images?: Express.MulterS3.File[];
+      }
+    | undefined,
+  languageCode: string,
+) => {
+  if (!files)
     throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.ACCOUNT_SUSPENDED, languageCode),
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FILES_UPLOADED, languageCode),
     );
+
+  const { profilePicture, images } = files || {};
+
+  if (!profilePicture || profilePicture.length === 0) {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.PROFILE_PICTURE_REQUIRED, languageCode),
+    );
+  }
+
+  if (!images || images.length === 0)
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(
+        USER_ERROR_MESSAGES.AT_LEAST_ONE_IMAGE_REQUIRED,
+        languageCode,
+      ),
+    );
+
+  const photos: {
+    user: User;
+    s3Key: string;
+    isPrimary?: boolean;
+  }[] = [];
+
+  photos.push({
+    user: { id: userId } as DeepPartial<any>,
+    s3Key: profilePicture?.[0].key,
+    isPrimary: true,
+  });
+
+  images.forEach((image) => {
+    photos.push({
+      user: { id: userId } as DeepPartial<any>,
+      s3Key: image.key,
+    });
+  });
+
+  return UserPhotoService.savePhotos(photos);
+};
+
+export const verifyUser = async (
+  userId: string,
+  file: Express.Multer.File | undefined,
+  languageCode: string,
+) => {
+  if (!file) {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(
+        USER_ERROR_MESSAGES.NO_VERIFICATION_IMAGE_UPLOADED,
+        languageCode,
+      ),
+    );
+  }
+
+  const verificationImageBuffer = file.buffer;
+
+  const verifiedPicture = await UserPhotoService.getVerifiedPictureByUserId(userId);
+
+  if (verifiedPicture) {
+    throw new BadRequestException('Verified picture is already saved.');
+  }
+
+  const profilePicture = await UserPhotoService.getProfilePictureByUserId(userId);
+
+  if (!profilePicture) {
+    throw new Error('User profile picture not found');
+  }
+
+  /* ---------- Rekognition  ---------- */
+
+  const sourceImageBuffer = await RekognitionUtil.s3ObjectToBuffer(profilePicture.s3Key);
+
+  const command = new CompareFacesCommand({
+    SourceImage: { Bytes: sourceImageBuffer },
+    TargetImage: { Bytes: verificationImageBuffer },
+    SimilarityThreshold: 60,
+    QualityFilter: 'MEDIUM',
+  });
+
+  const response = await rekognitionClient.send(command);
+
+  if (!response.FaceMatches || response.FaceMatches.length === 0) {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_VERIFICATION_FAILED, languageCode),
+    );
+  }
+
+  /* ---------- S3 UPLOAD ---------- */
+
+  await RekognitionUtil.indexFacesFromBuffer(userId, verificationImageBuffer);
+
+  const s3Key = await S3Util.uploadFile(
+    `users/${userId}/verification`,
+    verificationImageBuffer,
+    file.mimetype,
+  );
+
+  const queryRunner = AppDataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  await UserPhotoService.saveVerifiedPicture(
+    {
+      user: { id: userId } as DeepPartial<any>,
+      s3Key,
+      isVerified: true,
+    },
+    queryRunner.manager,
+  );
+
+  await markUserAsVerifiedById(userId, queryRunner.manager);
+  await markUserAsOnboardedById(userId, queryRunner.manager);
 
   return {
-    id: result.userId,
-    email: result.email,
-    fullName: result.fullName,
-    passwordHash: result.passwordHash,
-    country: result.country,
-    state: result.state,
-    city: result.city,
-    authType: result.authType,
-    isVerified: result.isVerified,
-    isSuspended: result.isSuspended,
-
-    profile:
-      result.bioEn === null
-        ? null
-        : {
-            bioEn: result.bioEn,
-            bioFr: result.bioFr,
-            bioEs: result.bioEs,
-            bioAr: result.bioAr,
-            dateOfBirth: result.dateOfBirth,
-            occupation: result.occupation,
-            gender: result.gender,
-          },
-
-    personalDetail:
-      result.heightEn === null
-        ? null
-        : {
-            heightEn: result.heightEn,
-            heightFr: result.heightFr,
-            heightEs: result.heightEs,
-            heightAr: result.heightAr,
-            bodyType: result.bodyType,
-            relationshipStatus: result.relationshipStatus,
-            childrenPreference: result.childrenPreference,
-          },
-
-    interests: result.interests.length === 0 ? null : result.interests,
-
-    lifestylePreference:
-      result.smoking === null
-        ? null
-        : {
-            smoking: result.smoking,
-            politicalViews: result.politicalViews,
-            diet: result.diet,
-            workoutRoutine: result.workoutRoutine,
-          },
-
-    datingPreference:
-      result.minAge === null
-        ? null
-        : {
-            minAge: result.minAge,
-            maxAge: result.maxAge,
-            interestedIn: result.interestedIn,
-            lookingFor: result.lookingFor,
-          },
-
-    prompts: result.prompts.length === 0 ? null : result.prompts,
-
-    photos: result.photos.length === 0 ? null : result.photos,
+    similarity: response.FaceMatches[0].Similarity,
   };
 };
 
@@ -269,6 +470,7 @@ export const getActiveUserByEmailAndRole = async (email: string, role: string) =
     city: result.city,
     authType: result.authType,
     isVerified: result.isVerified,
+    isOnboarded: result.isOnboarded,
     isSuspended: result.isSuspended,
 
     profile:
@@ -325,22 +527,6 @@ export const getActiveUserByEmailAndRole = async (email: string, role: string) =
   };
 };
 
-export const getUsers = async (page: number, isVerified: boolean, isSuspended: boolean) => {
-  const result = await findUsers(page, isVerified, isSuspended);
-
-  const total = result.length > 0 ? Number(result[0].total_count) : 0;
-
-  const data = result.map((r) => ({
-    userId: r.userId,
-    email: r.email,
-    gender: r.gender,
-    occupation: r.occupation,
-    age: Number(r.age),
-  }));
-
-  return { data, total };
-};
-
 export const saveUser = async (userData: Partial<User>): Promise<User> => {
   return save(userData);
 };
@@ -349,223 +535,16 @@ export const updateUserPassword = async (email: string, hashedPassword: string) 
   return updatePasswordByEmail(email, hashedPassword);
 };
 
-export const completeOnboarding = async (userId: string, data: OnboardingDTO) => {
-  const queryRunner = AppDataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
-
-  const { location, profile, interests } = data;
-
-  try {
-    const updatedUser = await updateUserLocation(userId, location, queryRunner.manager);
-
-    const savedProfile: any = await UserProfileService.saveUserProfile(
-      { userId, ...profile },
-      queryRunner.manager,
-    );
-
-    await InterestService.saveInterests({ userId, interests }, queryRunner.manager);
-
-    await queryRunner.commitTransaction();
-
-    return {
-      user: {
-        ...updatedUser,
-        passwordHash: undefined,
-      },
-      profile: {
-        id: savedProfile.id,
-        userId: savedProfile.user_id,
-
-        bioEn: savedProfile.bio_en,
-        bioFr: savedProfile.bio_fr,
-        bioAr: savedProfile.bio_ar,
-        bioEs: savedProfile.bio_es,
-
-        heightEn: savedProfile.height_en,
-        heightFr: savedProfile.height_fr,
-        heightAr: savedProfile.height_ar,
-        heightEs: savedProfile.height_es,
-
-        dateOfBirth: savedProfile.date_of_birth,
-        occupation: savedProfile.occupation,
-        gender: savedProfile.gender,
-        bodyType: savedProfile.body_type,
-        relationshipStatus: savedProfile.relationship_status,
-        childrenPreference: savedProfile.children_preference,
-      },
-    };
-  } catch (error) {
-    await queryRunner.rollbackTransaction();
-
-    throw error;
-  } finally {
-    await queryRunner.release();
-  }
-};
-
 const updateUserLocation = async (userId: string, user: Partial<User>, manager: EntityManager) => {
   const { country, city, state } = user;
 
   return updateLocationById(userId, { country, city, state }, manager);
 };
 
-export const uploadProfilePictures = async (
-  userId: string,
-  files:
-    | {
-        profilePicture?: Express.MulterS3.File[];
-        images?: Express.MulterS3.File[];
-      }
-    | undefined,
-  languageCode: string,
-) => {
-  if (!files)
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FILES_UPLOADED, languageCode),
-    );
-
-  const { profilePicture, images } = files || {};
-
-  if (!profilePicture || profilePicture.length === 0) {
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.PROFILE_PICTURE_REQUIRED, languageCode),
-    );
-  }
-
-  if (!images || images.length === 0)
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(
-        USER_ERROR_MESSAGES.AT_LEAST_ONE_IMAGE_REQUIRED,
-        languageCode,
-      ),
-    );
-
-  const photos: {
-    user: User;
-    s3Key: string;
-    isPrimary?: boolean;
-  }[] = [];
-
-  photos.push({
-    user: { id: userId } as DeepPartial<any>,
-    s3Key: profilePicture?.[0].key,
-    isPrimary: true,
-  });
-
-  images.forEach((image) => {
-    photos.push({
-      user: { id: userId } as DeepPartial<any>,
-      s3Key: image.key,
-    });
-  });
-
-  return UserPhotoService.savePhotos(photos);
+const markUserAsVerifiedById = async (userId: string, manager: EntityManager) => {
+  return updateIsVerifiedById(userId, manager);
 };
 
-export const createLivenessSession = async (clientRequestToken?: string) => {
-  const command = new CreateFaceLivenessSessionCommand({
-    ClientRequestToken: clientRequestToken || generateRequestToken(),
-  });
-
-  const response = await rekognitionClient.send(command);
-
-  return {
-    sessionId: response.SessionId,
-  };
-};
-
-export const getLivenessSession = async (userId: string, sessionId: string) => {
-  if (!sessionId) {
-    throw new BadRequestException('Session ID is required');
-  }
-
-  const command = new GetFaceLivenessSessionResultsCommand({
-    SessionId: sessionId,
-  });
-
-  const response = await rekognitionClient.send(command);
-
-  const firstAuditImage = response.AuditImages?.[0];
-
-  if (firstAuditImage?.Bytes) {
-    const auditImageBuffer = Buffer.from(firstAuditImage.Bytes);
-    // await UserPhotoService.updateVerificationImageByUserId(userId, auditImageBuffer);
-
-    // await RekognitionUtil.indexFaces(userId, auditImageBuffer);
-  }
-
-  return {
-    success: true,
-    result: {
-      sessionId: response.SessionId,
-      status: response.Status,
-      confidence: response.Confidence,
-      isLive: response.Status === 'SUCCEEDED',
-      auditImage: firstAuditImage?.Bytes,
-      response: response,
-    },
-  };
-};
-
-export const verifyUser = async (
-  userId: string,
-  file: Express.Multer.File | undefined,
-
-  languageCode: string,
-) => {
-  if (!file)
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(
-        USER_ERROR_MESSAGES.NO_VERIFICATION_IMAGE_UPLOADED,
-        languageCode,
-      ),
-    );
-
-  const verificationImageBuffer = file.buffer;
-
-  const verifiedPicture = await UserPhotoService.getVerifiedPictureByUserId(userId);
-
-  if (verifiedPicture) throw new BadRequestException('Verified picture is already saved.');
-
-  const profilePicture = await UserPhotoService.getProfilePictureByUserId(userId);
-
-  if (!profilePicture) throw new Error('User profile picture not found');
-
-  const sourceImageKey = profilePicture.s3Key;
-
-  const sourceImageBuffer = await RekognitionUtil.s3ObjectToBuffer(sourceImageKey);
-
-  const command = new CompareFacesCommand({
-    SourceImage: { Bytes: sourceImageBuffer },
-    TargetImage: { Bytes: verificationImageBuffer },
-    SimilarityThreshold: 60,
-  });
-
-  const response = await rekognitionClient.send(command);
-
-  if (response.FaceMatches && response.FaceMatches.length > 0) {
-    const key = await S3Util.uploadFile(
-      `users/${userId}/verification`,
-      verificationImageBuffer,
-      file.mimetype,
-    );
-
-    await RekognitionUtil.indexFaces(userId, key);
-
-    await UserPhotoService.saveVerifiedPicture({
-      user: { id: userId } as DeepPartial<any>,
-      s3Key: key,
-      isVerified: true,
-    });
-
-    return {
-      message: MessageUtil.getLocalizedMessage(USER_SUCCESS_MESSAGES.USER_VERIFIED, languageCode),
-      similarity: response.FaceMatches[0].Similarity,
-    };
-  } else {
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_VERIFICATION_FAILED, languageCode),
-    );
-  }
+const markUserAsOnboardedById = async (userId: string, manager: EntityManager) => {
+  return updateIsOnboardedById(userId, manager);
 };

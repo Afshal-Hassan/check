@@ -1,4 +1,3 @@
-import { UserPrompt } from './model';
 import { DeepPartial } from 'typeorm';
 import { SavePromptDTO } from './dto';
 import { saveUserPromptList } from './repo';
