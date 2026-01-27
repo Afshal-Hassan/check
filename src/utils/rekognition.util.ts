@@ -1,9 +1,10 @@
-import { IndexFacesCommand, SearchFacesByImageCommand } from '@aws-sdk/client-rekognition';
-import { rekognitionClient } from '@/config/aws-rekognition.config';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { s3 } from '@/config/aws-s3.config';
 import { Readable } from 'stream';
 import { ENV } from '@/config/env.config';
+import { s3 } from '@/config/aws-s3.config';
+import * as MessageUtil from '@/utils/message.util';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { IndexFacesCommand, SearchFacesByImageCommand } from '@aws-sdk/client-rekognition';
+import { rekognitionClient } from '@/config/aws-rekognition.config';
 
 export const s3ObjectToBuffer = async (key: string): Promise<Buffer> => {
   const { Body } = await s3.send(
@@ -25,7 +26,11 @@ export const s3ObjectToBuffer = async (key: string): Promise<Buffer> => {
   }
 };
 
-export const indexFacesFromBuffer = async (userId: string, imageBuffer: Buffer) => {
+export const indexFacesFromBuffer = async (
+  userId: string,
+  imageBuffer: Buffer,
+  languageCode: string,
+) => {
   try {
     const command = new IndexFacesCommand({
       CollectionId: ENV.AWS.REKOGNITION.COLLECTION_ID!,
@@ -35,13 +40,15 @@ export const indexFacesFromBuffer = async (userId: string, imageBuffer: Buffer) 
       ExternalImageId: userId,
       DetectionAttributes: ['DEFAULT'],
       MaxFaces: 1,
-      QualityFilter: 'MEDIUM',
+      QualityFilter: 'HIGH',
     });
 
     const response = await rekognitionClient.send(command);
 
     if (!response.FaceRecords || response.FaceRecords.length === 0) {
-      throw new Error('No face detected in the image');
+      throw new Error(
+        MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FACE_DETECTED, languageCode),
+      );
     }
 
     return response.FaceRecords;
@@ -50,10 +57,10 @@ export const indexFacesFromBuffer = async (userId: string, imageBuffer: Buffer) 
   }
 };
 
-export const indexFaces = async (userId: string, key: string) => {
+export const indexFaces = async (userId: string, key: string, languageCode: string) => {
   try {
     const imageBuffer = await s3ObjectToBuffer(key);
-    return indexFacesFromBuffer(userId, imageBuffer);
+    return indexFacesFromBuffer(userId, imageBuffer, languageCode);
   } catch (err) {
     throw err;
   }
@@ -88,6 +95,7 @@ const paginate = <T>(items: T[], page: number, pageSize: number): PaginatedResul
 };
 
 import { ListFacesCommand } from '@aws-sdk/client-rekognition';
+import { USER_ERROR_MESSAGES } from '@/modules/user/message';
 
 export const getAllOtherRemainingUsersInCollection = async (
   userId: string,

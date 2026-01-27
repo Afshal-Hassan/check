@@ -350,13 +350,15 @@ export const verifyUser = async (
   const verifiedPicture = await UserPhotoService.getVerifiedPictureByUserId(userId);
 
   if (verifiedPicture) {
-    throw new BadRequestException('Verified picture is already saved.');
+    throw new BadRequestException('You are already verified');
   }
 
   const profilePicture = await UserPhotoService.getProfilePictureByUserId(userId);
 
   if (!profilePicture) {
-    throw new Error('User profile picture not found');
+    throw new Error(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.PROFILE_PICTURE_REQUIRED, languageCode),
+    );
   }
 
   /* ---------- Rekognition  ---------- */
@@ -366,8 +368,8 @@ export const verifyUser = async (
   const command = new CompareFacesCommand({
     SourceImage: { Bytes: sourceImageBuffer },
     TargetImage: { Bytes: verificationImageBuffer },
-    SimilarityThreshold: 60,
-    QualityFilter: 'MEDIUM',
+    SimilarityThreshold: 90,
+    QualityFilter: 'HIGH',
   });
 
   const response = await rekognitionClient.send(command);
@@ -380,7 +382,7 @@ export const verifyUser = async (
 
   /* ---------- S3 UPLOAD ---------- */
 
-  await RekognitionUtil.indexFacesFromBuffer(userId, verificationImageBuffer);
+  await RekognitionUtil.indexFacesFromBuffer(userId, verificationImageBuffer, languageCode);
 
   const s3Key = await S3Util.uploadFile(
     `users/${userId}/verification`,

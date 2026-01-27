@@ -81,9 +81,15 @@ export const USER_ERROR_MESSAGES = {
     ar: 'فشل التحقق من المستخدم',
   },
   IMAGE_PROCESSING_FAILED: {
-    en: 'AWS Rekognition cannot process one of the images. Make sure it is a valid JPEG/PNG with a clear face.',
+    en: 'AWS Rekognition cannot process one of the images. Make sure it is a valid PNG/JPG/JPEG with a clear face.',
     fr: "AWS Rekognition ne peut pas traiter l'une des images. Assurez-vous qu'il s'agit d'un JPEG/PNG valide avec un visage clair.",
     es: 'AWS Rekognition no puede procesar una de las imágenes. Asegúrate de que sea un JPEG/PNG válido con un rostro claro.',
     ar: 'لا يمكن لـ AWS Rekognition معالجة إحدى الصور. تأكد من أنها JPEG/PNG صالحة وبها وجه واضح.',
+  },
+  NO_FACE_DETECTED: {
+    en: 'No face detected in the image',
+    fr: "Aucun visage n'a été détecté dans l'image",
+    es: 'No se detectó ningún rostro en la imagen',
+    ar: 'لم يتم اكتشاف أي وجه في الصورة',
   },
 };
