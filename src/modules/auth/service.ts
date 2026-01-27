@@ -84,6 +84,61 @@ export const login = async (data: LoginDto, languageCode: string) => {
   }
 };
 
+export const forgotPassword = async (data: ForgotPasswordDto, languageCode: string) => {
+  const { email } = data;
+
+  const user = await UserService.getActiveUserByEmail(email);
+
+  if (!user)
+    throw new NotFoundException(
+      MessageUtil.getLocalizedMessage(FORGOT_PASSWORD_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
+    );
+
+  const otp = OtpUtil.generateOtp();
+
+  await OtpUtil.storeOtpInRedis({
+    email,
+    action: OtpAction.ForgotPassword,
+    otp,
+  });
+  await EmailUtil.sendOtpEmail(email, OtpAction.ForgotPassword, otp);
+
+  return { email };
+};
+
+export const resetPassword = async (
+  data: ResetPasswordDto,
+  languageCode: string,
+): Promise<void> => {
+  const { email, newPassword, otp } = data;
+
+  const user = await UserService.getActiveUserByEmail(email);
+
+  if (!user)
+    throw new NotFoundException(
+      MessageUtil.getLocalizedMessage(RESET_PASSWORD_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
+    );
+
+  const isSameAsOld = await PasswordUtil.comparePassword(newPassword, user.passwordHash);
+
+  if (isSameAsOld)
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(
+        RESET_PASSWORD_ERROR_MESSAGES.NEW_PASSWORD_SAME_AS_OLD,
+        languageCode,
+      ),
+    );
+
+  await OtpUtil.verifyOtp({ email, action: OtpAction.ForgotPassword, otp, languageCode });
+  await OtpUtil.deleteOtpFromRedis(email, OtpAction.ForgotPassword);
+
+  const passwordHash = await PasswordUtil.hashPassword(newPassword);
+
+  await UserService.updateUserPassword(email, passwordHash);
+
+  return;
+};
+
 const loginWithEmail = async (
   { email, password, role }: { email: string; password: string; role: string },
   languageCode: string,
@@ -162,59 +217,4 @@ const continueWithGoogle = async (
   const token = JwtUtil.generateToken({ id: user.id, email: user.email }, Role.User);
 
   return { user: { ...user, passwordHash: undefined }, token };
-};
-
-export const forgotPassword = async (data: ForgotPasswordDto, languageCode: string) => {
-  const { email } = data;
-
-  const user = await UserService.getActiveUserByEmail(email);
-
-  if (!user)
-    throw new NotFoundException(
-      MessageUtil.getLocalizedMessage(FORGOT_PASSWORD_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
-    );
-
-  const otp = OtpUtil.generateOtp();
-
-  await OtpUtil.storeOtpInRedis({
-    email,
-    action: OtpAction.ForgotPassword,
-    otp,
-  });
-  await EmailUtil.sendOtpEmail(email, OtpAction.ForgotPassword, otp);
-
-  return { email };
-};
-
-export const resetPassword = async (
-  data: ResetPasswordDto,
-  languageCode: string,
-): Promise<void> => {
-  const { email, newPassword, otp } = data;
-
-  const user = await UserService.getActiveUserByEmail(email);
-
-  if (!user)
-    throw new NotFoundException(
-      MessageUtil.getLocalizedMessage(RESET_PASSWORD_ERROR_MESSAGES.USER_NOT_FOUND, languageCode),
-    );
-
-  const isSameAsOld = await PasswordUtil.comparePassword(newPassword, user.passwordHash);
-
-  if (isSameAsOld)
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(
-        RESET_PASSWORD_ERROR_MESSAGES.NEW_PASSWORD_SAME_AS_OLD,
-        languageCode,
-      ),
-    );
-
-  await OtpUtil.verifyOtp({ email, action: OtpAction.ForgotPassword, otp, languageCode });
-  await OtpUtil.deleteOtpFromRedis(email, OtpAction.ForgotPassword);
-
-  const passwordHash = await PasswordUtil.hashPassword(newPassword);
-
-  await UserService.updateUserPassword(email, passwordHash);
-
-  return;
 };

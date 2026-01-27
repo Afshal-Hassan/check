@@ -42,6 +42,9 @@ export class User {
   @Column({ name: 'state', nullable: true, type: 'varchar', length: 32 })
   state!: string;
 
+  @Column({ default: false, name: 'is_onboarded' })
+  isOnboarded!: boolean;
+
   @Column({ default: false, name: 'is_verified' })
   isVerified!: boolean;
 

@@ -8,18 +8,9 @@ export enum GenderEnum {
   FEMALE = 'female',
   NON_BINARY = 'non_binary',
   OTHER = 'other',
-  PREFER_NOT_TO_SAY = 'prefer not to say',
+  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
 }
 
 export function generateRequestToken() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
-
-export const toBase64 = (bytes: any) => {
-  if (!bytes) return null;
-  return Buffer.from(bytes).toString('base64');
-};
-
-export const asyncHandler = (fn: any) => (req: any, res: any, next: any) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
