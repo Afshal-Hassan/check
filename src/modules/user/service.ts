@@ -309,7 +309,13 @@ export const uploadProfilePictures = async (
       ),
     );
 
-  await RekognitionUtil.detectFace(profilePicture?.[0].key, languageCode);
+  const detectResponse = await RekognitionUtil.detectFace(profilePicture?.[0].key);
+
+  if (!detectResponse.FaceDetails || detectResponse.FaceDetails.length === 0) {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FACE_DETECTED, languageCode),
+    );
+  }
 
   const photos: {
     user: User;
@@ -365,7 +371,14 @@ export const verifyUser = async (
 
   /* ---------- Rekognition  ---------- */
 
-  await RekognitionUtil.detectFace(verificationImageBuffer, languageCode);
+  const detectResponse = await RekognitionUtil.detectFace(verificationImageBuffer);
+
+  if (!detectResponse.FaceDetails || detectResponse.FaceDetails.length === 0) {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FACE_DETECTED, languageCode),
+    );
+  }
+
   const response: any = await RekognitionUtil.compareFace(
     {
       userId,

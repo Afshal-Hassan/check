@@ -184,7 +184,7 @@ export const searchUsersWithSimilarFaces = async (userId: string, key: string) =
   }
 };
 
-export const detectFace = async (image: Buffer | string, languageCode: string) => {
+export const detectFace = async (image: Buffer | string) => {
   const imageBuffer = await normalizeImageToBuffer(image);
 
   const detectCommand = new DetectFacesCommand({
@@ -192,13 +192,7 @@ export const detectFace = async (image: Buffer | string, languageCode: string) =
     Attributes: ['ALL'],
   });
 
-  const detectResponse = await rekognitionClient.send(detectCommand);
-
-  if (!detectResponse.FaceDetails || detectResponse.FaceDetails.length === 0) {
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FACE_DETECTED, languageCode),
-    );
-  }
+  return await rekognitionClient.send(detectCommand);
 
   // const faceDetails = detectResponse.FaceDetails[0];
 
