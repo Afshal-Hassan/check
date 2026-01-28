@@ -38,12 +38,6 @@ export const USER_ERROR_MESSAGES = {
     es: 'Usuario no encontrado',
     ar: 'المستخدم غير موجود',
   },
-  ALREADY_UPLOADED_PICTURE: {
-    en: 'You have already uploaded picture',
-    fr: 'Vous avez déjà téléchargé une image',
-    es: 'Ya has subido una imagen',
-    ar: 'لقد قمت بتحميل الصورة بالفعل',
-  },
   NO_FILES_UPLOADED: {
     en: 'No files uploaded',
     fr: 'Aucun fichier téléchargé',

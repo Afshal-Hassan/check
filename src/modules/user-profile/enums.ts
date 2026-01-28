@@ -5,7 +5,7 @@ export enum BodyTypeEnum {
   CURVY = 'curvy',
   MUSCULAR = 'muscular',
   PLUS_SIZE = 'plus_size',
-  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
+  SKIP_FOR_NOW = 'skip_for_now',
 }
 
 export enum RelationshipStatusEnum {
@@ -13,7 +13,7 @@ export enum RelationshipStatusEnum {
   DIVORCED = 'divorced',
   WIDOWED = 'widowed',
   SEPARATED = 'separated',
-  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
+  SKIP_FOR_NOW = 'skip_for_now',
 }
 
 export enum ChildrenEnum {
@@ -21,5 +21,5 @@ export enum ChildrenEnum {
   NO = 'no',
   MAYBE = 'maybe',
   OPEN_TO_DISCUSSION = 'open_to_discussion',
-  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
+  SKIP_FOR_NOW = 'skip_for_now',
 }
