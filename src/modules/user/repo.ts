@@ -272,7 +272,22 @@ export const findActiveUsersById = async (
       AND u.is_suspended = false
       AND u.id = ANY($3)
       AND reac.id IS NULL
-      AND up.gender = COALESCE($4, cdp.interested_in)
+
+      -- 1. Other user's gender matches my interest
+      AND (
+        cdp.interested_in = 'everyone'
+        OR up.gender = cdp.interested_in
+        OR up.gender = 'prefer_not_to_say'
+      )
+
+    -- 2. Other user's interest matches my gender
+      AND (
+        dp.interested_in IS NULL
+        OR dp.interested_in = 'everyone'
+        OR dp.interested_in = cdp.gender
+        OR cdp.gender = 'prefer_not_to_say'
+      )
+
       AND DATE_PART('year', AGE(up.date_of_birth)) 
           BETWEEN COALESCE($5, cdp.min_age) AND COALESCE($6, cdp.max_age)
       AND (
