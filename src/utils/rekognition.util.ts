@@ -192,7 +192,7 @@ export const detectFace = async (image: Buffer | string) => {
     Attributes: ['ALL'],
   });
 
-  return await rekognitionClient.send(detectCommand);
+  return rekognitionClient.send(detectCommand);
 
   // const faceDetails = detectResponse.FaceDetails[0];
 

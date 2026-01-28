@@ -4,6 +4,7 @@ import { USER_ERROR_MESSAGES, USER_SUCCESS_MESSAGES } from './message';
 import * as HeaderUtil from '@/utils/header.util';
 import * as MessageUtil from '@/utils/message.util';
 import { BadRequestException } from '@/exceptions';
+import { feetInToCm } from '@/constants';
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -41,10 +42,23 @@ export const getUserDetailsById = async (req: Request, res: Response) => {
 
 export const getUsersWithSimilarFaces = async (req: Request, res: Response) => {
   try {
-    const page = Number(req.query.page) || 1;
     const userId = (req as any).user?.userId as string;
     const languageCode = HeaderUtil.getLanguageCode(req);
-    const result = await UserService.getUsersWithSimilarFaces(userId, languageCode, page);
+
+    const { page = '1', interestedIn, minAge, maxAge, minHeight, maxHeight } = req.query;
+
+    const filters = {
+      page: Number(page),
+      interestedIn: interestedIn as string | undefined,
+      minAge: minAge ? Number(minAge) : undefined,
+      maxAge: maxAge ? Number(maxAge) : undefined,
+      minHeightCm: minHeight ? feetInToCm(Number(minHeight)) : undefined,
+      maxHeightCm: maxHeight ? feetInToCm(Number(maxHeight)) : undefined,
+      minHeightFt: minHeight ? Number(minHeight) : undefined,
+      maxHeightFt: maxHeight ? Number(maxHeight) : undefined,
+    };
+
+    const result = await UserService.getUsersWithSimilarFaces(userId, languageCode, filters);
 
     res.status(200).json({
       message: MessageUtil.getLocalizedMessage(

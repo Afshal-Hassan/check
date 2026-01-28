@@ -86,4 +86,10 @@ export const USER_ERROR_MESSAGES = {
     es: 'No se detectó ningún rostro en la imagen',
     ar: 'لم يتم اكتشاف أي وجه في الصورة',
   },
+  NO_FACE_DETECTED_IN_PROFILE_IMAGE: {
+    en: 'No face detected in the profile image',
+    fr: "Aucun visage n'a été détecté dans l'image de profil",
+    es: 'No se detectó ningún rostro en la imagen de perfil',
+    ar: 'لم يتم اكتشاف أي وجه في صورة الملف الشخصي',
+  },
 };
