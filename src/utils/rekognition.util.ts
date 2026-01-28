@@ -32,6 +32,18 @@ const s3ObjectToBuffer = async (key: string): Promise<Buffer> => {
   }
 };
 
+const normalizeImageToBuffer = async (image: Buffer | string): Promise<Buffer> => {
+  if (Buffer.isBuffer(image)) {
+    return image;
+  }
+
+  if (typeof image === 'string') {
+    return s3ObjectToBuffer(image);
+  }
+
+  throw new Error('Invalid image input: expected Buffer or S3 key');
+};
+
 const indexFacesFromBuffer = async (userId: string, imageBuffer: Buffer, languageCode: string) => {
   try {
     const command = new IndexFacesCommand({
@@ -172,29 +184,33 @@ export const searchUsersWithSimilarFaces = async (userId: string, key: string) =
   }
 };
 
-export const detectFace = async (verificationImageBuffer: Buffer) => {
+export const detectFace = async (image: Buffer | string, languageCode: string) => {
+  const imageBuffer = await normalizeImageToBuffer(image);
+
   const detectCommand = new DetectFacesCommand({
-    Image: { Bytes: verificationImageBuffer },
+    Image: { Bytes: imageBuffer },
     Attributes: ['ALL'],
   });
 
   const detectResponse = await rekognitionClient.send(detectCommand);
 
   if (!detectResponse.FaceDetails || detectResponse.FaceDetails.length === 0) {
-    throw new BadRequestException('No valid face detected or image quality too low');
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FACE_DETECTED, languageCode),
+    );
   }
 
-  const faceDetails = detectResponse.FaceDetails[0];
+  // const faceDetails = detectResponse.FaceDetails[0];
 
-  if (faceDetails.Quality) {
-    const { Sharpness } = faceDetails.Quality;
+  // if (faceDetails.Quality) {
+  //   const { Sharpness } = faceDetails.Quality;
 
-    if (Sharpness && Sharpness < 50) {
-      throw new BadRequestException(
-        'Image appears to be a spoofed picture or picture quality too low',
-      );
-    }
-  }
+  //   if (Sharpness && Sharpness < 50) {
+  //     throw new BadRequestException(
+  //       'Image appears to be a spoofed picture or picture quality too low',
+  //     );
+  //   }
+  // }
 };
 
 export const compareFace = async (

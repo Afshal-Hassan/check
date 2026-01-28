@@ -20,7 +20,7 @@ export enum DietEnum {
   PESCATARIAN = 'pescatarian',
   KETO = 'keto',
   OTHER = 'other',
-  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
+  SKIP_FOR_NOW = 'skip_for_now',
 }
 
 export enum WorkoutEnum {
@@ -29,5 +29,5 @@ export enum WorkoutEnum {
   ONE_TWO_WEEK = 'one_two_week',
   RARELY = 'rarely',
   NEVER = 'never',
-  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
+  SKIP_FOR_NOW = 'skip_for_now',
 }

@@ -309,6 +309,8 @@ export const uploadProfilePictures = async (
       ),
     );
 
+  await RekognitionUtil.detectFace(profilePicture?.[0].key, languageCode);
+
   const photos: {
     user: User;
     s3Key: string;
@@ -363,7 +365,7 @@ export const verifyUser = async (
 
   /* ---------- Rekognition  ---------- */
 
-  // await RekognitionUtil.detectFace(verificationImageBuffer);
+  await RekognitionUtil.detectFace(verificationImageBuffer, languageCode);
   const response: any = await RekognitionUtil.compareFace(
     {
       userId,
