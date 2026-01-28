@@ -363,52 +363,53 @@ export const verifyUser = async (
 
   /* ---------- Rekognition  ---------- */
 
-  const sourceImageBuffer = await RekognitionUtil.s3ObjectToBuffer(profilePicture.s3Key);
-
-  const command = new CompareFacesCommand({
-    SourceImage: { Bytes: sourceImageBuffer },
-    TargetImage: { Bytes: verificationImageBuffer },
-    SimilarityThreshold: 90,
-    QualityFilter: 'HIGH',
-  });
-
-  const response = await rekognitionClient.send(command);
-
-  if (!response.FaceMatches || response.FaceMatches.length === 0) {
-    throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_VERIFICATION_FAILED, languageCode),
-    );
-  }
+  // await RekognitionUtil.detectFace(verificationImageBuffer);
+  const response: any = await RekognitionUtil.compareFace(
+    {
+      userId,
+      sourceImageKey: profilePicture.s3Key,
+      verificationImageBuffer,
+    },
+    languageCode,
+  );
 
   /* ---------- S3 UPLOAD ---------- */
-
-  await RekognitionUtil.indexFacesFromBuffer(userId, verificationImageBuffer, languageCode);
-
-  const s3Key = await S3Util.uploadFile(
-    `users/${userId}/verification`,
-    verificationImageBuffer,
-    file.mimetype,
-  );
 
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
 
-  await UserPhotoService.saveVerifiedPicture(
-    {
-      user: { id: userId } as DeepPartial<any>,
-      s3Key,
-      isVerified: true,
-    },
-    queryRunner.manager,
-  );
+  try {
+    const s3Key = await S3Util.uploadFile(
+      `users/${userId}/verification`,
+      verificationImageBuffer,
+      file.mimetype,
+    );
 
-  await markUserAsVerifiedById(userId, queryRunner.manager);
-  await markUserAsOnboardedById(userId, queryRunner.manager);
+    await UserPhotoService.saveVerifiedPicture(
+      {
+        user: { id: userId } as DeepPartial<any>,
+        s3Key,
+        isVerified: true,
+      },
+      queryRunner.manager,
+    );
 
-  return {
-    similarity: response.FaceMatches[0].Similarity,
-  };
+    await markUserAsVerifiedById(userId, queryRunner.manager);
+    await markUserAsOnboardedById(userId, queryRunner.manager);
+
+    await queryRunner.commitTransaction();
+
+    return {
+      similarity: response.FaceMatches[0].Similarity,
+    };
+  } catch (error: any) {
+    await queryRunner.rollbackTransaction();
+
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
 };
 
 export const getUserAndProfilePictureById = async (userId: string) => {

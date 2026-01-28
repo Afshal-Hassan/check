@@ -3,10 +3,16 @@ import { ENV } from '@/config/env.config';
 import { s3 } from '@/config/aws-s3.config';
 import * as MessageUtil from '@/utils/message.util';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { IndexFacesCommand, SearchFacesByImageCommand } from '@aws-sdk/client-rekognition';
+import {
+  CompareFacesCommand,
+  CompareFacesCommandOutput,
+  DetectFacesCommand,
+  IndexFacesCommand,
+  SearchFacesByImageCommand,
+} from '@aws-sdk/client-rekognition';
 import { rekognitionClient } from '@/config/aws-rekognition.config';
 
-export const s3ObjectToBuffer = async (key: string): Promise<Buffer> => {
+const s3ObjectToBuffer = async (key: string): Promise<Buffer> => {
   const { Body } = await s3.send(
     new GetObjectCommand({ Bucket: ENV.AWS.S3.BUCKET_NAME!, Key: key }),
   );
@@ -26,11 +32,7 @@ export const s3ObjectToBuffer = async (key: string): Promise<Buffer> => {
   }
 };
 
-export const indexFacesFromBuffer = async (
-  userId: string,
-  imageBuffer: Buffer,
-  languageCode: string,
-) => {
+const indexFacesFromBuffer = async (userId: string, imageBuffer: Buffer, languageCode: string) => {
   try {
     const command = new IndexFacesCommand({
       CollectionId: ENV.AWS.REKOGNITION.COLLECTION_ID!,
@@ -57,7 +59,7 @@ export const indexFacesFromBuffer = async (
   }
 };
 
-export const indexFaces = async (userId: string, key: string, languageCode: string) => {
+const indexFaces = async (userId: string, key: string, languageCode: string) => {
   try {
     const imageBuffer = await s3ObjectToBuffer(key);
     return indexFacesFromBuffer(userId, imageBuffer, languageCode);
@@ -96,6 +98,7 @@ const paginate = <T>(items: T[], page: number, pageSize: number): PaginatedResul
 
 import { ListFacesCommand } from '@aws-sdk/client-rekognition';
 import { USER_ERROR_MESSAGES } from '@/modules/user/message';
+import { BadRequestException } from '@/exceptions';
 
 export const getAllOtherRemainingUsersInCollection = async (
   userId: string,
@@ -167,4 +170,59 @@ export const searchUsersWithSimilarFaces = async (userId: string, key: string) =
     console.error('Error searching face by image:', err);
     throw err;
   }
+};
+
+export const detectFace = async (verificationImageBuffer: Buffer) => {
+  const detectCommand = new DetectFacesCommand({
+    Image: { Bytes: verificationImageBuffer },
+    Attributes: ['ALL'],
+  });
+
+  const detectResponse = await rekognitionClient.send(detectCommand);
+
+  if (!detectResponse.FaceDetails || detectResponse.FaceDetails.length === 0) {
+    throw new BadRequestException('No valid face detected or image quality too low');
+  }
+
+  const faceDetails = detectResponse.FaceDetails[0];
+
+  if (faceDetails.Quality) {
+    const { Sharpness } = faceDetails.Quality;
+
+    if (Sharpness && Sharpness < 50) {
+      throw new BadRequestException(
+        'Image appears to be a spoofed picture or picture quality too low',
+      );
+    }
+  }
+};
+
+export const compareFace = async (
+  {
+    userId,
+    sourceImageKey,
+    verificationImageBuffer,
+  }: { userId: string; sourceImageKey: string; verificationImageBuffer: Buffer },
+  languageCode: string,
+): Promise<CompareFacesCommandOutput> => {
+  const sourceImageBuffer = await s3ObjectToBuffer(sourceImageKey);
+
+  const command = new CompareFacesCommand({
+    SourceImage: { Bytes: sourceImageBuffer },
+    TargetImage: { Bytes: verificationImageBuffer },
+    SimilarityThreshold: 90,
+    QualityFilter: 'HIGH',
+  });
+
+  const response = await rekognitionClient.send(command);
+
+  if (!response.FaceMatches || response.FaceMatches.length === 0) {
+    throw new BadRequestException(
+      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.USER_VERIFICATION_FAILED, languageCode),
+    );
+  }
+
+  await indexFacesFromBuffer(userId, verificationImageBuffer, languageCode);
+
+  return response;
 };
