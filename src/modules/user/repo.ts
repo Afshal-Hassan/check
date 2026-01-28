@@ -256,11 +256,12 @@ export const findActiveUsersById = async (
     FROM users u
     INNER JOIN roles r ON r.id = u.role_id
     LEFT JOIN user_profiles up ON up.user_id = u.id
-    LEFT JOIN dating_preferences cdp ON cdp.user_id = $2
+    LEFT JOIN user_profiles cup ON cup.user_id = $2  -- Current user's profile
+    LEFT JOIN dating_preferences cdp ON cdp.user_id = $2  -- Current user's dating preferences
     LEFT JOIN user_interests ui ON ui.user_id = u.id
     LEFT JOIN interests i ON i.id = ui.interest_id
     LEFT JOIN lifestyle_preferences lp ON lp.user_id = u.id
-    LEFT JOIN dating_preferences dp ON dp.user_id = u.id
+    LEFT JOIN dating_preferences dp ON dp.user_id = u.id  -- Other user's dating preferences
     LEFT JOIN user_prompts upm ON upm.user_id = u.id
     LEFT JOIN prompts p ON p.id = upm.prompt_id
     LEFT JOIN user_photos uph ON uph.user_id = u.id 
@@ -273,23 +274,31 @@ export const findActiveUsersById = async (
       AND u.id = ANY($3)
       AND reac.id IS NULL
 
-      -- 1. Other user's gender matches my interest
+      -- CONDITION 1: Current user's preference matches other user's gender
+      -- Priority: Use filter if provided, otherwise use stored preference
+
       AND (
-        cdp.interested_in = 'everyone'
-        OR up.gender = cdp.interested_in
-        OR up.gender = 'prefer_not_to_say'
+        COALESCE($4, cdp.interested_in) = 'everyone'  -- I'm interested in everyone
+        OR COALESCE($4, cdp.interested_in) = up.gender  -- I'm interested in their specific gender
+        OR up.gender = 'prefer_not_to_say'  -- They prefer not to say (show to everyone)
+        OR COALESCE($4, cdp.interested_in) IS NULL  -- No preference set (show everyone)
       )
 
-    -- 2. Other user's interest matches my gender
+      -- CONDITION 2: Other user's preference matches current user's gender
+      -- Their interested_in should match my gender
+      
       AND (
-        dp.interested_in IS NULL
-        OR dp.interested_in = 'everyone'
-        OR dp.interested_in = cdp.gender
-        OR cdp.gender = 'prefer_not_to_say'
+        dp.interested_in = 'everyone'  -- They're interested in everyone
+        OR dp.interested_in = cup.gender  -- They're interested in my specific gender
+        OR cup.gender = 'prefer_not_to_say'  -- I prefer not to say (match with everyone)
+        OR dp.interested_in IS NULL  -- They haven't set preference (match with everyone)
       )
 
+      -- Age filter: Use filter if provided, otherwise use stored preference
       AND DATE_PART('year', AGE(up.date_of_birth)) 
           BETWEEN COALESCE($5, cdp.min_age) AND COALESCE($6, cdp.max_age)
+      
+      -- Height filter
       AND (
         (up.unit = 'cm' AND 
           ( ($7::numeric IS NULL OR up.height >= $7::numeric) AND ($8::numeric IS NULL OR up.height <= $8::numeric) )
@@ -312,7 +321,7 @@ export const findActiveUsersById = async (
     ENV.AWS.CLOUDFRONT.URL, // $1 CDN
     userId, // $2 current user
     userIds, // $3 userIds filter
-    filters.interestedIn ?? null, // $4 interestedIn
+    filters.interestedIn ?? null, // $4 interestedIn filter (overrides stored preference)
     filters.minAge ?? null, // $5 minAge
     filters.maxAge ?? null, // $6 maxAge
     filters.minHeightCm ?? null, // $7
