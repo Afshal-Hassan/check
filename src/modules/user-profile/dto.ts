@@ -1,14 +1,6 @@
 import { Transform } from 'class-transformer';
-import { BodyTypeEnum, ChildrenEnum, RelationshipStatusEnum } from './enums';
-import {
-  ArrayNotEmpty,
-  IsArray,
-  IsEnum,
-  IsNotEmpty,
-  IsString,
-  IsUUID,
-  MaxLength,
-} from 'class-validator';
+import { BodyTypeEnum, ChildrenEnum, HeightUnit, RelationshipStatusEnum } from './enums';
+import { ArrayNotEmpty, IsArray, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class PersonalDetailsDTO {
   @IsEnum(BodyTypeEnum, {
@@ -29,11 +21,15 @@ export class PersonalDetailsDTO {
   @IsNotEmpty({ message: 'Children preference is required' })
   childrenPreference!: ChildrenEnum;
 
-  @Transform(({ value }) => value?.trim())
-  @IsString({ message: 'Height must be a string' })
+  @IsNumber({}, { message: 'Height should be a number' })
   @IsNotEmpty({ message: 'Height is required' })
-  @MaxLength(10, { message: 'Height must be at most 10 characters' })
-  height!: string;
+  height!: number;
+
+  @IsEnum(HeightUnit, {
+    message: `Height unit must be one of: ${Object.values(HeightUnit).join(', ')}`,
+  })
+  @IsNotEmpty({ message: 'Height unit is required' })
+  unit!: HeightUnit;
 
   @IsArray({ message: 'Languages must be an array' })
   @ArrayNotEmpty({ message: 'At least one interest is required' })

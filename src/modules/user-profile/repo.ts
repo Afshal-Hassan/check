@@ -44,10 +44,8 @@ export const updatePersonalDetailsByUserId = async (
 ): Promise<UserProfile> => {
   const updateData: Partial<UserProfile> = {};
 
-  if (data.heightEn !== undefined) updateData.heightEn = data.heightEn;
-  if (data.heightFr !== undefined) updateData.heightFr = data.heightFr;
-  if (data.heightEs !== undefined) updateData.heightEs = data.heightEs;
-  if (data.heightAr !== undefined) updateData.heightAr = data.heightAr;
+  if (data.height !== undefined) updateData.height = data.height;
+  if (data.unit !== undefined) updateData.unit = data.unit;
 
   if (data.bodyType !== undefined) updateData.bodyType = data.bodyType;
   if (data.relationshipStatus !== undefined)

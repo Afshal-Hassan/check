@@ -23,7 +23,7 @@ export const upload = multer({
     if (ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new BadRequestException('Only png, jpg, jpeg image files are allowed for S3 upload'));
+      cb(new BadRequestException('Only png, jpg, jpeg image files are allowed'));
     }
   },
 

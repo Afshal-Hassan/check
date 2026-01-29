@@ -25,17 +25,11 @@ export class UserProfile {
   @Column({ name: 'bio_ar', type: 'text' })
   bioAr!: string;
 
-  @Column({ name: 'height_en', type: 'varchar', length: 32, nullable: true })
-  heightEn!: string;
+  @Column({ name: 'height', nullable: true })
+  height!: number;
 
-  @Column({ name: 'height_fr', type: 'varchar', length: 32, nullable: true })
-  heightFr!: string;
-
-  @Column({ name: 'height_es', type: 'varchar', length: 32, nullable: true })
-  heightEs!: string;
-
-  @Column({ name: 'height_ar', type: 'varchar', length: 32, nullable: true })
-  heightAr!: string;
+  @Column({ name: 'unit', type: 'varchar', length: 32, nullable: true })
+  unit!: string;
 
   @Column({ name: 'date_of_birth', type: 'date' })
   dateOfBirth!: Date;

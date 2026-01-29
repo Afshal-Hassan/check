@@ -14,3 +14,14 @@ export enum GenderEnum {
 export function generateRequestToken() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
+
+export function feetInToCm(height: number | undefined): number | undefined {
+  if (height === undefined) return undefined;
+
+  // Get feet and inches
+  const feet = Math.floor(height / 100); // 510 → 5
+  const inches = height % 100; // 510 → 10
+
+  // Convert to cm
+  return feet * 30.48 + inches * 2.54; // 1 ft = 30.48 cm, 1 in = 2.54 cm
+}

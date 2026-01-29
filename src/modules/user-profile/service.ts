@@ -38,11 +38,6 @@ export const saveUserProfile = async (
 };
 
 export const updatePersonalDetails = async (userId: string, data: PersonalDetailsDTO) => {
-  const heightEn = await GoogleTranslateUtil.translateText(data.height, 'en');
-  const heightFr = await GoogleTranslateUtil.translateText(data.height, 'fr');
-  const heightEs = await GoogleTranslateUtil.translateText(data.height, 'es');
-  const heightAr = await GoogleTranslateUtil.translateText(data.height, 'ar');
-
   const queryRunner = AppDataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
@@ -54,10 +49,8 @@ export const updatePersonalDetails = async (userId: string, data: PersonalDetail
       bodyType: data.bodyType,
       relationshipStatus: data.relationshipStatus,
       childrenPreference: data.childrenPreference,
-      heightEn,
-      heightFr,
-      heightEs,
-      heightAr,
+      height: data.height,
+      unit: data.unit,
     });
 
     await queryRunner.commitTransaction();
@@ -72,11 +65,8 @@ export const updatePersonalDetails = async (userId: string, data: PersonalDetail
         bioAr: updatedProfile.bio_ar,
         bioEs: updatedProfile.bio_es,
 
-        heightEn: updatedProfile.height_en,
-        heightFr: updatedProfile.height_fr,
-        heightAr: updatedProfile.height_ar,
-        heightEs: updatedProfile.height_es,
-
+        height: updatedProfile.height,
+        unit: updatedProfile.unit,
         dateOfBirth: updatedProfile.date_of_birth,
         occupation: updatedProfile.occupation,
         gender: updatedProfile.gender,

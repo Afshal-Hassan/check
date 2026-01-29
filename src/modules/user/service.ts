@@ -1,5 +1,6 @@
 import { User } from './model';
 import { OnboardingDTO } from './dto';
+import { S3Util } from '@/utils/s3.util';
 import { USER_ERROR_MESSAGES } from './message';
 import { BadRequestException } from '@/exceptions';
 import * as MessageUtil from '@/utils/message.util';
@@ -24,9 +25,6 @@ import {
   updateIsVerifiedById,
   updateIsOnboardedById,
 } from './repo';
-import { CompareFacesCommand } from '@aws-sdk/client-rekognition';
-import { rekognitionClient } from '@/config/aws-rekognition.config';
-import { S3Util } from '@/utils/s3.util';
 
 export const getUsers = async (page: number, isVerified: boolean, isSuspended: boolean) => {
   const result = await findUsers(page, isVerified, isSuspended);
@@ -84,13 +82,11 @@ export const getUserDetailsById = async (userId: string, languageCode: string) =
           },
 
     personalDetail:
-      result.heightEn === null
+      result.height === null
         ? null
         : {
-            heightEn: result.heightEn,
-            heightFr: result.heightFr,
-            heightEs: result.heightEs,
-            heightAr: result.heightAr,
+            height: result.height,
+            unit: result.unit,
             bodyType: result.bodyType,
             relationshipStatus: result.relationshipStatus,
             childrenPreference: result.childrenPreference,
@@ -127,7 +123,16 @@ export const getUserDetailsById = async (userId: string, languageCode: string) =
 export const getUsersWithSimilarFaces = async (
   userId: string,
   languageCode: string,
-  page: number,
+  filters: {
+    page?: number;
+    interestedIn?: string;
+    minAge?: number;
+    maxAge?: number;
+    minHeightCm?: number;
+    maxHeightCm?: number;
+    minHeightFt?: number;
+    maxHeightFt?: number;
+  },
 ) => {
   const user = await getUserAndVerifiedPictureById(userId);
 
@@ -150,9 +155,11 @@ export const getUsersWithSimilarFaces = async (
 
   const allUserIds = [...similarUserIds, ...otherUsers.map((u) => u.userId!)];
 
-  const users = await findActiveUsersById(allUserIds, page);
+  console.log(allUserIds);
 
-  return users.map((user) => {
+  const users = await findActiveUsersById(userId, allUserIds, filters);
+
+  return users.map((user: any) => {
     const similarUser = similarUsers.find((u) => u.userId === user.userId);
 
     return {
@@ -182,13 +189,11 @@ export const getUsersWithSimilarFaces = async (
             },
 
       personalDetail:
-        user.heightEn === null
+        user.height === null
           ? null
           : {
-              heightEn: user.heightEn,
-              heightFr: user.heightFr,
-              heightEs: user.heightEs,
-              heightAr: user.heightAr,
+              height: user.height,
+              unit: user.unit,
               bodyType: user.bodyType,
               relationshipStatus: user.relationshipStatus,
               childrenPreference: user.childrenPreference,
@@ -256,11 +261,8 @@ export const completeOnboarding = async (userId: string, data: OnboardingDTO) =>
         bioAr: savedProfile.bio_ar,
         bioEs: savedProfile.bio_es,
 
-        heightEn: savedProfile.height_en,
-        heightFr: savedProfile.height_fr,
-        heightAr: savedProfile.height_ar,
-        heightEs: savedProfile.height_es,
-
+        height: savedProfile.height,
+        unit: savedProfile.unit,
         dateOfBirth: savedProfile.date_of_birth,
         occupation: savedProfile.occupation,
         gender: savedProfile.gender,
@@ -313,7 +315,10 @@ export const uploadProfilePictures = async (
 
   if (!detectResponse.FaceDetails || detectResponse.FaceDetails.length === 0) {
     throw new BadRequestException(
-      MessageUtil.getLocalizedMessage(USER_ERROR_MESSAGES.NO_FACE_DETECTED, languageCode),
+      MessageUtil.getLocalizedMessage(
+        USER_ERROR_MESSAGES.NO_FACE_DETECTED_IN_PROFILE_IMAGE,
+        languageCode,
+      ),
     );
   }
 
@@ -505,13 +510,11 @@ export const getActiveUserByEmailAndRole = async (email: string, role: string) =
           },
 
     personalDetail:
-      result.heightEn === null
+      result.height === null
         ? null
         : {
-            heightEn: result.heightEn,
-            heightFr: result.heightFr,
-            heightEs: result.heightEs,
-            heightAr: result.heightAr,
+            height: result.height,
+            unit: result.unit,
             bodyType: result.bodyType,
             relationshipStatus: result.relationshipStatus,
             childrenPreference: result.childrenPreference,

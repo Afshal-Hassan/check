@@ -36,70 +36,35 @@ export const findUsers = async (page = 1, isVerified?: boolean, isSuspended?: bo
 };
 
 export const findActiveUserById = async (userId: string) => {
-  const qb = AppDataSource.createQueryBuilder(User, 'u')
-    /* ===================== JOINS ===================== */
-
-    // Role
-    .innerJoin('u.role', 'r')
-
-    // Profile
-    .leftJoin('user_profiles', 'up', 'up.user_id = u.id')
-
-    // Interests
-    .leftJoin('user_interests', 'ui', 'ui.user_id = u.id')
-    .leftJoin('interests', 'i', 'i.id = ui.interest_id')
-
-    // Lifestyle
-    .leftJoin('lifestyle_preferences', 'lp', 'lp.user_id = u.id')
-
-    // Dating preference
-    .leftJoin('dating_preferences', 'dp', 'dp.user_id = u.id')
-
-    // Prompts
-    .leftJoin('user_prompts', 'upm', 'upm.user_id = u.id')
-    .leftJoin('prompts', 'p', 'p.id = upm.prompt_id')
-
-    // Photos
-    .leftJoin('user_photos', 'uph', 'uph.user_id = u.id')
-
-    /* ===================== FILTER ===================== */
-
-    .where('u.role_id = 2')
-    .andWhere('u.id = :userId', { userId })
-
-    /* ===================== SELECT ===================== */
-
-    .select([
+  const query = `
+    SELECT
       /* ---------- USER ---------- */
-      'u.id AS "userId"',
-      'u.full_name AS "fullName"',
-      'u.email AS "email"',
-      'u.country AS "country"',
-      'u.state AS "state"',
-      'u.city AS "city"',
-      'u.auth_type AS "authType"',
-      'u.is_verified AS "isVerified"',
-      'u.is_onboarded AS "isOnboarded"',
-      'u.is_suspended AS "isSuspended"',
+      u.id AS "userId",
+      u.full_name AS "fullName",
+      u.email AS "email",
+      u.country AS "country",
+      u.state AS "state",
+      u.city AS "city",
+      u.auth_type AS "authType",
+      u.is_verified AS "isVerified",
+      u.is_onboarded AS "isOnboarded",
+      u.is_suspended AS "isSuspended",
 
       /* ---------- PROFILE ---------- */
-      'up.bio_en AS "bioEn"',
-      'up.bio_fr AS "bioFr"',
-      'up.bio_es AS "bioEs"',
-      'up.bio_ar AS "bioAr"',
-      'up.height_en AS "heightEn"',
-      'up.height_fr AS "heightFr"',
-      'up.height_es AS "heightEs"',
-      'up.height_ar AS "heightAr"',
-      'up.date_of_birth AS "dateOfBirth"',
-      'up.occupation AS "occupation"',
-      'up.gender AS "gender"',
-      'up.body_type AS "bodyType"',
-      'up.relationship_status AS "relationshipStatus"',
-      'up.children_preference AS "childrenPreference"',
+      up.bio_en AS "bioEn",
+      up.bio_fr AS "bioFr",
+      up.bio_es AS "bioEs",
+      up.bio_ar AS "bioAr",
+      up.height AS "height",
+      up.unit AS "unit",
+      up.date_of_birth AS "dateOfBirth",
+      up.occupation AS "occupation",
+      up.gender AS "gender",
+      up.body_type AS "bodyType",
+      up.relationship_status AS "relationshipStatus",
+      up.children_preference AS "childrenPreference",
 
       /* ---------- INTERESTS ---------- */
-      `
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
@@ -108,23 +73,21 @@ export const findActiveUserById = async (userId: string) => {
           )
         ) FILTER (WHERE i.id IS NOT NULL),
         '[]'
-      ) AS "interests"
-      `,
+      ) AS "interests",
 
       /* ---------- LIFESTYLE ---------- */
-      'lp.smoking AS "smoking"',
-      'lp.political_views AS "politicalViews"',
-      'lp.diet AS "diet"',
-      'lp.workout_routine AS "workoutRoutine"',
+      lp.smoking AS "smoking",
+      lp.political_views AS "politicalViews",
+      lp.diet AS "diet",
+      lp.workout_routine AS "workoutRoutine",
 
       /* ---------- DATING ---------- */
-      'dp.min_age AS "minAge"',
-      'dp.max_age AS "maxAge"',
-      'dp.interested_in AS "interestedIn"',
-      'dp.looking_for AS "lookingFor"',
+      dp.min_age AS "minAge",
+      dp.max_age AS "maxAge",
+      dp.interested_in AS "interestedIn",
+      dp.looking_for AS "lookingFor",
 
       /* ---------- PROMPTS ---------- */
-      `
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
@@ -140,42 +103,44 @@ export const findActiveUserById = async (userId: string) => {
           )
         ) FILTER (WHERE p.id IS NOT NULL),
         '[]'
-      ) AS "prompts"
-      `,
+      ) AS "prompts",
 
       /* ---------- PHOTOS ---------- */
-      `
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
             'id', uph.id,
-            'image', :cdn || '/' || uph.s3_key,
+            'image', $2 || '/' || uph.s3_key,
             'isPrimary', uph.is_primary
           )
         ) FILTER (WHERE uph.id IS NOT NULL),
         '[]'
       ) AS "photos"
-      `,
-    ])
 
-    /* ===================== GROUP BY ===================== */
+    FROM users u
+    INNER JOIN roles r ON r.id = u.role_id
+    LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN user_interests ui ON ui.user_id = u.id
+    LEFT JOIN interests i ON i.id = ui.interest_id
+    LEFT JOIN lifestyle_preferences lp ON lp.user_id = u.id
+    LEFT JOIN dating_preferences dp ON dp.user_id = u.id
+    LEFT JOIN user_prompts upm ON upm.user_id = u.id
+    LEFT JOIN prompts p ON p.id = upm.prompt_id
+    LEFT JOIN user_photos uph ON uph.user_id = u.id
 
-    .groupBy(
-      `
-      u.id,
-      r.id,
-      up.id,
-      lp.id,
-      dp.id
-    `,
-    )
+    WHERE u.role_id = 2
+      AND u.id = $1
 
-    /* ===================== PARAMS ===================== */
+    GROUP BY u.id, r.id, up.id, lp.id, dp.id
+    LIMIT 1
+  `;
 
-    .setParameter('cdn', ENV.AWS.CLOUDFRONT.URL)
-    .limit(1);
+  const result = await AppDataSource.query(query, [
+    userId, // $1
+    ENV.AWS.CLOUDFRONT.URL, // $2
+  ]);
 
-  return qb.getRawOne();
+  return result[0] ?? null;
 };
 
 export const findUserAndVerifiedPictureById = async (userId: string) => {
@@ -197,103 +162,69 @@ export const findUserAndVerifiedPictureById = async (userId: string) => {
   return result;
 };
 
-export const findActiveUsersById = async (userIds: string[], page: number) => {
+export const findActiveUsersById = async (
+  userId: string,
+  userIds: string[],
+  filters: {
+    page?: number;
+    interestedIn?: string;
+    minAge?: number;
+    maxAge?: number;
+    minHeightCm?: number;
+    maxHeightCm?: number;
+    minHeightFt?: number;
+    maxHeightFt?: number;
+  },
+) => {
   if (!userIds || userIds.length === 0) {
     return [];
   }
 
-  const offset = (page - 1) * 10;
+  const offset = ((filters.page || 1) - 1) * 10;
 
-  const qb = AppDataSource.createQueryBuilder(User, 'u')
-    /* ===================== JOINS ===================== */
+  const query = `
+    SELECT
+      u.id AS "userId",
+      u.full_name AS "fullName",
+      u.email AS "email",
+      u.country AS "country",
+      u.state AS "state",
+      u.city AS "city",
+      u.auth_type AS "authType",
+      u.is_verified AS "isVerified",
+      u.is_onboarded AS "isOnboarded",
+      u.is_suspended AS "isSuspended",
 
-    // Role
-    .innerJoin('u.role', 'r')
+      up.bio_en AS "bioEn",
+      up.bio_fr AS "bioFr",
+      up.bio_es AS "bioEs",
+      up.bio_ar AS "bioAr",
+      up.height AS "height",
+      up.unit AS "unit",
+      up.date_of_birth AS "dateOfBirth",
+      up.occupation AS "occupation",
+      up.gender AS "gender",
+      up.body_type AS "bodyType",
+      up.relationship_status AS "relationshipStatus",
+      up.children_preference AS "childrenPreference",
 
-    // Profile
-    .leftJoin('user_profiles', 'up', 'up.user_id = u.id')
-
-    // Interests
-    .leftJoin('user_interests', 'ui', 'ui.user_id = u.id')
-    .leftJoin('interests', 'i', 'i.id = ui.interest_id')
-
-    // Lifestyle
-    .leftJoin('lifestyle_preferences', 'lp', 'lp.user_id = u.id')
-
-    // Dating preference
-    .leftJoin('dating_preferences', 'dp', 'dp.user_id = u.id')
-
-    // Prompts
-    .leftJoin('user_prompts', 'upm', 'upm.user_id = u.id')
-    .leftJoin('prompts', 'p', 'p.id = upm.prompt_id')
-
-    // Photos
-    .leftJoin('user_photos', 'uph', 'uph.user_id = u.id')
-
-    /* ===================== FILTER ===================== */
-
-    .where('u.role_id = 2')
-    .andWhere('u.is_suspended = false')
-    .andWhere('u.id IN (:...userIds)', { userIds })
-
-    /* ===================== SELECT ===================== */
-
-    .select([
-      /* ---------- USER ---------- */
-      'u.id AS "userId"',
-      'u.full_name AS "fullName"',
-      'u.email AS "email"',
-      'u.country AS "country"',
-      'u.state AS "state"',
-      'u.city AS "city"',
-      'u.auth_type AS "authType"',
-      'u.is_verified AS "isVerified"',
-      'u.is_onboarded AS "isOnboarded"',
-      'u.is_suspended AS "isSuspended"',
-
-      /* ---------- PROFILE ---------- */
-      'up.bio_en AS "bioEn"',
-      'up.bio_fr AS "bioFr"',
-      'up.bio_es AS "bioEs"',
-      'up.bio_ar AS "bioAr"',
-      'up.height_en AS "heightEn"',
-      'up.height_fr AS "heightFr"',
-      'up.height_es AS "heightEs"',
-      'up.height_ar AS "heightAr"',
-      'up.date_of_birth AS "dateOfBirth"',
-      'up.occupation AS "occupation"',
-      'up.gender AS "gender"',
-      'up.body_type AS "bodyType"',
-      'up.relationship_status AS "relationshipStatus"',
-      'up.children_preference AS "childrenPreference"',
-
-      /* ---------- INTERESTS ---------- */
-      `
       COALESCE(
         json_agg(
-          DISTINCT jsonb_build_object(
-            'id', i.id,
-            'name', i.name
-          )
+          DISTINCT jsonb_build_object('id', i.id, 'name', i.name)
         ) FILTER (WHERE i.id IS NOT NULL),
         '[]'
-      ) AS "interests"
-      `,
+      ) AS "interests",
 
-      /* ---------- LIFESTYLE ---------- */
-      'lp.smoking AS "smoking"',
-      'lp.political_views AS "politicalViews"',
-      'lp.diet AS "diet"',
-      'lp.workout_routine AS "workoutRoutine"',
+      lp.smoking AS "smoking",
+      lp.political_views AS "politicalViews",
+      lp.diet AS "diet",
+      lp.workout_routine AS "workoutRoutine",
 
-      /* ---------- DATING ---------- */
-      'dp.min_age AS "minAge"',
-      'dp.max_age AS "maxAge"',
-      'dp.interested_in AS "interestedIn"',
-      'dp.looking_for AS "lookingFor"',
+      dp.min_age AS "minAge",
+      dp.max_age AS "maxAge",
+      dp.interested_in AS "interestedIn",
+      dp.looking_for AS "lookingFor",
 
-      /* ---------- PROMPTS ---------- */
-      `
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
@@ -309,46 +240,98 @@ export const findActiveUsersById = async (userIds: string[], page: number) => {
           )
         ) FILTER (WHERE p.id IS NOT NULL),
         '[]'
-      ) AS "prompts"
-      `,
+      ) AS "prompts",
 
-      /* ---------- PHOTOS ---------- */
-      `
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
             'id', uph.id,
-            'image', :cdn || '/' || uph.s3_key,
+            'image', $1 || '/' || uph.s3_key,
             'isPrimary', uph.is_primary
           )
         ) FILTER (WHERE uph.id IS NOT NULL),
         '[]'
       ) AS "photos"
-      `,
-    ])
 
-    /* ===================== GROUP BY ===================== */
+    FROM users u
+    INNER JOIN roles r ON r.id = u.role_id
+    LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN user_profiles cup ON cup.user_id = $2  -- Current user's profile
+    LEFT JOIN dating_preferences cdp ON cdp.user_id = $2  -- Current user's dating preferences
+    LEFT JOIN user_interests ui ON ui.user_id = u.id
+    LEFT JOIN interests i ON i.id = ui.interest_id
+    LEFT JOIN lifestyle_preferences lp ON lp.user_id = u.id
+    LEFT JOIN dating_preferences dp ON dp.user_id = u.id  -- Other user's dating preferences
+    LEFT JOIN user_prompts upm ON upm.user_id = u.id
+    LEFT JOIN prompts p ON p.id = upm.prompt_id
+    LEFT JOIN user_photos uph ON uph.user_id = u.id 
+      AND (uph.is_verified = false OR uph.is_verified IS NULL)
+    LEFT JOIN reactions reac ON reac.reaction_giver_id = $2
+      AND reac.reaction_receiver_id = u.id
 
-    .groupBy(
-      `
-      u.id,
-      r.id,
-      up.id,
-      lp.id,
-      dp.id
-    `,
-    )
-    /* ===================== PAGINATION ===================== */
+    WHERE u.role_id = 2
+      AND u.is_suspended = false
+      AND u.id = ANY($3)
+      AND reac.id IS NULL
 
-    .orderBy('array_position(:userIds::uuid[], u.id)')
-    .limit(10)
-    .offset(offset)
+      -- CONDITION 1: Current user's preference matches other user's gender
+      -- Priority: Use filter if provided, otherwise use stored preference
 
-    /* ===================== PARAMS ===================== */
+      AND (
+        COALESCE($4, cdp.interested_in) = 'everyone'  -- I'm interested in everyone
+        OR COALESCE($4, cdp.interested_in) = up.gender  -- I'm interested in their specific gender
+        OR up.gender = 'prefer_not_to_say'  -- They prefer not to say (show to everyone)
+        OR COALESCE($4, cdp.interested_in) IS NULL  -- No preference set (show everyone)
+      )
 
-    .setParameter('cdn', ENV.AWS.CLOUDFRONT.URL);
+      -- CONDITION 2: Other user's preference matches current user's gender
+      -- Their interested_in should match my gender
+      
+      AND (
+        dp.interested_in = 'everyone'  -- They're interested in everyone
+        OR dp.interested_in = cup.gender  -- They're interested in my specific gender
+        OR cup.gender = 'prefer_not_to_say'  -- I prefer not to say (match with everyone)
+        OR dp.interested_in IS NULL  -- They haven't set preference (match with everyone)
+      )
 
-  return qb.getRawMany();
+      -- Age filter: Use filter if provided, otherwise use stored preference
+      AND DATE_PART('year', AGE(up.date_of_birth)) 
+          BETWEEN COALESCE($5, cdp.min_age) AND COALESCE($6, cdp.max_age)
+      
+      -- Height filter
+      AND (
+        (up.unit = 'cm' AND 
+          ( ($7::numeric IS NULL OR up.height >= $7::numeric) AND ($8::numeric IS NULL OR up.height <= $8::numeric) )
+        )
+        OR
+        (up.unit = 'ft' AND 
+          ( ($9::numeric IS NULL OR up.height >= $9::numeric) AND ($10::numeric IS NULL OR up.height <= $10::numeric) )
+        )
+      )
+
+    GROUP BY u.id, r.id, up.id, lp.id, dp.id
+    ORDER BY array_position($3, u.id)
+    LIMIT 10
+    OFFSET $11
+  `;
+
+  console.log(filters);
+
+  const result = await AppDataSource.query(query, [
+    ENV.AWS.CLOUDFRONT.URL, // $1 CDN
+    userId, // $2 current user
+    userIds, // $3 userIds filter
+    filters.interestedIn ?? null, // $4 interestedIn filter (overrides stored preference)
+    filters.minAge ?? null, // $5 minAge
+    filters.maxAge ?? null, // $6 maxAge
+    filters.minHeightCm ?? null, // $7
+    filters.maxHeightCm ?? null, // $8
+    filters.minHeightFt ?? null, // $9
+    filters.maxHeightFt ?? null, // $10
+    offset, // $11 pagination offset
+  ]);
+
+  return result;
 };
 
 export const findUserAndProfilePictureById = async (userId: string) => {
@@ -379,71 +362,36 @@ export const findActiveUserByEmail = async (email: string): Promise<User | null>
 };
 
 export const findActiveUserByEmailAndRole = async (email: string, role: string) => {
-  const qb = AppDataSource.createQueryBuilder(User, 'u')
-    /* ===================== JOINS ===================== */
-
-    // Role
-    .innerJoin('u.role', 'r')
-
-    // Profile
-    .leftJoin('user_profiles', 'up', 'up.user_id = u.id')
-
-    // Interests (many-to-many)
-    .leftJoin('user_interests', 'ui', 'ui.user_id = u.id')
-    .leftJoin('interests', 'i', 'i.id = ui.interest_id')
-
-    // Lifestyle
-    .leftJoin('lifestyle_preferences', 'lp', 'lp.user_id = u.id')
-
-    // Dating preference
-    .leftJoin('dating_preferences', 'dp', 'dp.user_id = u.id')
-
-    // Prompts
-    .leftJoin('user_prompts', 'upm', 'upm.user_id = u.id')
-    .leftJoin('prompts', 'p', 'p.id = upm.prompt_id')
-
-    // Photos
-    .leftJoin('user_photos', 'uph', 'uph.user_id = u.id')
-
-    /* ===================== FILTERS ===================== */
-
-    .where('u.email = :email', { email })
-    .andWhere('r.name = :role', { role: role.toUpperCase() })
-
-    /* ===================== SELECT ===================== */
-
-    .select([
+  const query = `
+    SELECT
       /* ---------- USER ---------- */
-      'u.id AS "userId"',
-      'u.full_name AS "fullName"',
-      'u.email AS "email"',
-      'u.password_hash AS "passwordHash"',
-      'u.country AS "country"',
-      'u.state AS "state"',
-      'u.city AS "city"',
-      'u.auth_type AS "authType"',
-      'u.is_verified AS "isVerified"',
-      'u.is_onboarded AS "isOnboarded"',
-      'u.is_suspended AS "isSuspended"',
+      u.id AS "userId",
+      u.full_name AS "fullName",
+      u.email AS "email",
+      u.password_hash AS "passwordHash",
+      u.country AS "country",
+      u.state AS "state",
+      u.city AS "city",
+      u.auth_type AS "authType",
+      u.is_verified AS "isVerified",
+      u.is_onboarded AS "isOnboarded",
+      u.is_suspended AS "isSuspended",
 
       /* ---------- PROFILE ---------- */
-      'up.bio_en AS "bioEn"',
-      'up.bio_fr AS "bioFr"',
-      'up.bio_es AS "bioEs"',
-      'up.bio_ar AS "bioAr"',
-      'up.height_en AS "heightEn"',
-      'up.height_fr AS "heightFr"',
-      'up.height_es AS "heightEs"',
-      'up.height_ar AS "heightAr"',
-      'up.date_of_birth AS "dateOfBirth"',
-      'up.occupation AS "occupation"',
-      'up.gender AS "gender"',
-      'up.body_type AS "bodyType"',
-      'up.relationship_status AS "relationshipStatus"',
-      'up.children_preference AS "childrenPreference"',
+      up.bio_en AS "bioEn",
+      up.bio_fr AS "bioFr",
+      up.bio_es AS "bioEs",
+      up.bio_ar AS "bioAr",
+      up.height AS "height",
+      up.unit AS "unit",
+      up.date_of_birth AS "dateOfBirth",
+      up.occupation AS "occupation",
+      up.gender AS "gender",
+      up.body_type AS "bodyType",
+      up.relationship_status AS "relationshipStatus",
+      up.children_preference AS "childrenPreference",
 
       /* ---------- INTERESTS ---------- */
-      `
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
@@ -452,79 +400,75 @@ export const findActiveUserByEmailAndRole = async (email: string, role: string) 
           )
         ) FILTER (WHERE i.id IS NOT NULL),
         '[]'
-      ) AS "interests"
-      `,
+      ) AS "interests",
 
       /* ---------- LIFESTYLE ---------- */
-      'lp.smoking AS "smoking"',
-      'lp.political_views AS "politicalViews"',
-      'lp.diet AS "diet"',
-      'lp.workout_routine AS "workoutRoutine"',
+      lp.smoking AS "smoking",
+      lp.political_views AS "politicalViews",
+      lp.diet AS "diet",
+      lp.workout_routine AS "workoutRoutine",
 
       /* ---------- DATING ---------- */
-      'dp.min_age AS "minAge"',
-      'dp.max_age AS "maxAge"',
-      'dp.interested_in AS "interestedIn"',
-      'dp.looking_for AS "lookingFor"',
+      dp.min_age AS "minAge",
+      dp.max_age AS "maxAge",
+      dp.interested_in AS "interestedIn",
+      dp.looking_for AS "lookingFor",
 
       /* ---------- PROMPTS ---------- */
-      `
       COALESCE(
-  json_agg(
-    DISTINCT jsonb_build_object(
-      'id', p.id,
-      'questionEn', p.question_en,
-      'questionFr', p.question_fr,
-      'questionEs', p.question_es,
-      'questionAr', p.question_ar,
-      'answerEn', upm.answer_en,
-      'answerFr', upm.answer_fr,
-      'answerEs', upm.answer_es,
-      'answerAr', upm.answer_ar
-    )
-  ) FILTER (WHERE p.id IS NOT NULL),
-  '[]'
-) AS "prompts"
-      `,
+        json_agg(
+          DISTINCT jsonb_build_object(
+            'id', p.id,
+            'questionEn', p.question_en,
+            'questionFr', p.question_fr,
+            'questionEs', p.question_es,
+            'questionAr', p.question_ar,
+            'answerEn', upm.answer_en,
+            'answerFr', upm.answer_fr,
+            'answerEs', upm.answer_es,
+            'answerAr', upm.answer_ar
+          )
+        ) FILTER (WHERE p.id IS NOT NULL),
+        '[]'
+      ) AS "prompts",
 
       /* ---------- PHOTOS ---------- */
-      `
       COALESCE(
         json_agg(
           DISTINCT jsonb_build_object(
             'id', uph.id,
-             'image', :cdn || '/' || uph.s3_key,
+            'image', $3 || '/' || uph.s3_key,
             'isPrimary', uph.is_primary
           )
         ) FILTER (WHERE uph.id IS NOT NULL),
         '[]'
       ) AS "photos"
-      `,
-    ])
 
-    /* ===================== GROUP BY ===================== */
+    FROM users u
+    INNER JOIN roles r ON r.id = u.role_id
+    LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN user_interests ui ON ui.user_id = u.id
+    LEFT JOIN interests i ON i.id = ui.interest_id
+    LEFT JOIN lifestyle_preferences lp ON lp.user_id = u.id
+    LEFT JOIN dating_preferences dp ON dp.user_id = u.id
+    LEFT JOIN user_prompts upm ON upm.user_id = u.id
+    LEFT JOIN prompts p ON p.id = upm.prompt_id
+    LEFT JOIN user_photos uph ON uph.user_id = u.id
 
-    .groupBy(
-      `
-      u.id,
-      r.id,
-      up.id,
-      lp.id,
-      dp.id
-    `,
-    )
+    WHERE u.email = $1
+      AND r.name = $2
 
-    /* ===================== PARAMS ===================== */
+    GROUP BY u.id, r.id, up.id, lp.id, dp.id
+    LIMIT 1
+  `;
 
-    .setParameter('cdn', ENV.AWS.CLOUDFRONT.URL)
+  const result = await AppDataSource.query(query, [
+    email, // $1
+    role.toUpperCase(), // $2
+    ENV.AWS.CLOUDFRONT.URL, // $3
+  ]);
 
-    /* ===================== LIMIT ===================== */
-
-    .limit(1);
-
-  const result = await qb.getRawOne();
-
-  return result;
+  return result[0] ?? null;
 };
 
 export const save = async (userData: Partial<User>): Promise<User> => {

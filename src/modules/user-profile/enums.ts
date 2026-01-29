@@ -23,3 +23,8 @@ export enum ChildrenEnum {
   OPEN_TO_DISCUSSION = 'open_to_discussion',
   SKIP_FOR_NOW = 'skip_for_now',
 }
+
+export enum HeightUnit {
+  CM = 'cm',
+  FEET = 'ft',
+}
