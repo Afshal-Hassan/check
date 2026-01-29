@@ -1,6 +1,6 @@
 export enum InterestedInEnum {
-  MEN = 'men',
-  WOMEN = 'women',
+  MEN = 'male',
+  WOMEN = 'female',
   EVERYONE = 'everyone',
 }
 
