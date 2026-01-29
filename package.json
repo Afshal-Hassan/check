@@ -23,9 +23,6 @@
     "migrate:revert": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/config/data-source.ts",
     "prepare": "node -e \"if (process.env.NODE_ENV !== 'production' && !process.env.CI) { require('husky').install() }\""
   },
-  "_moduleAliases": {
-    "@": "dist"
-  },
   "dependencies": {
     "@aws-sdk/client-rekognition": "^3.975.0",
     "@aws-sdk/client-s3": "^3.971.0",
