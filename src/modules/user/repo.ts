@@ -180,10 +180,15 @@ export const findActiveUsersById = async (
     return [];
   }
 
-  const offset = ((filters.page || 1) - 1) * 10;
+  const PAGE_SIZE = 10;
+
+  const page = filters.page || 1;
+  const offset = (page - 1) * PAGE_SIZE;
 
   const query = `
     SELECT
+      COUNT(*) OVER() AS "totalCount",
+
       u.id AS "userId",
       u.full_name AS "fullName",
       u.email AS "email",
@@ -264,7 +269,7 @@ export const findActiveUsersById = async (
     LEFT JOIN dating_preferences dp ON dp.user_id = u.id  -- Other user's dating preferences
     LEFT JOIN user_prompts upm ON upm.user_id = u.id
     LEFT JOIN prompts p ON p.id = upm.prompt_id
-    LEFT JOIN user_photos uph ON uph.user_id = u.id 
+    LEFT JOIN user_photos uph ON uph.user_id = u.id
       AND (uph.is_verified = false OR uph.is_verified IS NULL)
     LEFT JOIN reactions reac ON reac.reaction_giver_id = $2
       AND reac.reaction_receiver_id = u.id
@@ -284,9 +289,9 @@ export const findActiveUsersById = async (
         OR COALESCE($4, cdp.interested_in) IS NULL  -- No preference set (show everyone)
       )
 
-      -- CONDITION 2: Other user's preference matches current user's gender
+       -- CONDITION 2: Other user's preference matches current user's gender
       -- Their interested_in should match my gender
-      
+
       AND (
         dp.interested_in = 'everyone'  -- They're interested in everyone
         OR dp.interested_in = cup.gender  -- They're interested in my specific gender
@@ -295,9 +300,9 @@ export const findActiveUsersById = async (
       )
 
       -- Age filter: Use filter if provided, otherwise use stored preference
-      AND DATE_PART('year', AGE(up.date_of_birth)) 
-          BETWEEN COALESCE($5, cdp.min_age) AND COALESCE($6, cdp.max_age)
-      
+      AND DATE_PART('year', AGE(up.date_of_birth))
+        BETWEEN COALESCE($5, cdp.min_age) AND COALESCE($6, cdp.max_age)
+
       -- Height filter
       AND (
         (up.unit = 'cm' AND 
@@ -311,13 +316,11 @@ export const findActiveUsersById = async (
 
     GROUP BY u.id, r.id, up.id, lp.id, dp.id
     ORDER BY array_position($3, u.id)
-    LIMIT 10
+    LIMIT ${PAGE_SIZE}
     OFFSET $11
   `;
 
-  console.log(filters);
-
-  const result = await AppDataSource.query(query, [
+  return AppDataSource.query(query, [
     ENV.AWS.CLOUDFRONT.URL, // $1 CDN
     userId, // $2 current user
     userIds, // $3 userIds filter
@@ -330,8 +333,6 @@ export const findActiveUsersById = async (
     filters.maxHeightFt ?? null, // $10
     offset, // $11 pagination offset
   ]);
-
-  return result;
 };
 
 export const findUserAndProfilePictureById = async (userId: string) => {
