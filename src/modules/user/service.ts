@@ -155,11 +155,13 @@ export const getUsersWithSimilarFaces = async (
 
   const allUserIds = [...similarUserIds, ...otherUsers.map((u) => u.userId!)];
 
-  console.log(allUserIds);
+  const rawUsers = await findActiveUsersById(userId, allUserIds, filters);
 
-  const users = await findActiveUsersById(userId, allUserIds, filters);
+  const total = rawUsers.length ? Number(rawUsers[0].totalCount) : 0;
+  const page = filters.page || 1;
+  const totalPages = Math.ceil(total / 10);
 
-  return users.map((user: any) => {
+  const data = rawUsers.map((user: any) => {
     const similarUser = similarUsers.find((u) => u.userId === user.userId);
 
     return {
@@ -179,10 +181,7 @@ export const getUsersWithSimilarFaces = async (
         user.bioEn === null
           ? null
           : {
-              bioEn: user.bioEn,
-              bioFr: user.bioFr,
-              bioEs: user.bioEs,
-              bioAr: user.bioAr,
+              bio: user.bioEn,
               dateOfBirth: user.dateOfBirth,
               occupation: user.occupation,
               gender: user.gender,
@@ -226,6 +225,18 @@ export const getUsersWithSimilarFaces = async (
       photos: user.photos?.length ? user.photos : null,
     };
   });
+
+  return {
+    data,
+    pagination: {
+      page,
+      pageSize: 10,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
 };
 
 export const completeOnboarding = async (userId: string, data: OnboardingDTO) => {
